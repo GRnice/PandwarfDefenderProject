@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.aventador.protectalarm.HomeFragment"
+    tools:showIn="@layout/activity_main"
+    android:weightSum="10">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/mac_address_layout"
+        android:layout_weight="2"
+        android:weightSum="10">
+
+        <Button
+            android:text="Fast Connection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/factConnectionButton"
+            android:layout_weight="1" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/scan_progressbar"
+            android:layout_weight="9" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/frequency_select_layout"
+        android:layout_weight="1"></LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.5"
+        android:weightSum="10"
+        android:id="@+id/layout_search_optimal">
+
+        <Button
+            android:text="Search optimal Threshold"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:id="@+id/searchOptimalThresholdButton"
+            android:layout_weight="5" />
+
+        <TextView
+            android:text="Result ..."
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:id="@+id/rssiValuetextView"
+            android:layout_weight="3"
+            android:gravity="fill_vertical|center_horizontal"
+            android:textSize="24sp" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:id="@+id/progressBarSearchOptimalThreshoold"
+            android:layout_weight="2"
+            android:indeterminate="true" />
+    </LinearLayout>
+
+</LinearLayout>
