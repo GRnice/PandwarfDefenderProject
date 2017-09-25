@@ -32,15 +32,7 @@ public class ThresholdFinder {
     }
 
     public void find(final Activity activity, final String frequency, final GollumCallbackGetInteger cbDone) {
-        GollumDongle gollumDongle = GollumDongle.getInstance(activity);
-        gollumDongle.rfSpecanSetPktDelay(0, DELAY_PACKETS_RSSI_MS, new GollumCallbackGetInteger() {
-            @Override
-            public void done(int i) {
-                startSpecan(activity, frequency, cbDone);
-            }
-        });
-
-
+        startSpecan(activity, frequency, cbDone);
     }
 
     private void startSpecan(Activity activity, String frequency, final GollumCallbackGetInteger cbDone) {

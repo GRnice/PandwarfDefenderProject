@@ -14,11 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 public class WatchMan {
-    private static int DELAY_PACKETS_RSSI_MS = 700;
+    private static int DELAY_PACKETS_RSSI_MS = 500;
 
     private static int WATCH_INTERVAL = 10;
     private static int PEAK_TOLERANCE = 5;
-
 
     private static WatchMan instance;
     private AtomicBoolean watchManIsRunning;
@@ -44,13 +43,7 @@ public class WatchMan {
             return false;
         }
         Log.d(TAG, "Start WatchMan");
-        GollumDongle.getInstance(activity).rfSpecanSetPktDelay(0, DELAY_PACKETS_RSSI_MS, new GollumCallbackGetInteger() {
-            @Override
-            public void done(int i) {
-                Log.d(TAG, "Set pkt delay done");
-                startSpecan(activity, frequency, dbTolerance, cbAttackDetected);
-            }
-        });
+        startSpecan(activity, frequency, dbTolerance, cbAttackDetected);
         return true;
     }
 
