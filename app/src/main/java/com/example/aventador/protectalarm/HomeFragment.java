@@ -1,9 +1,12 @@
 package com.example.aventador.protectalarm;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -80,6 +83,12 @@ public class HomeFragment extends Fragment {
         progressBarSearchOptimalThreshold = (ProgressBar) bodyView.findViewById(R.id.progressBarSearchOptimalThreshoold);
         progressBarSearchOptimalThreshold.setVisibility(View.INVISIBLE);
         rssiTextView = (TextView) bodyView.findViewById(R.id.rssiValuetextView);
+        rssiTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogDbTolerance();
+            }
+        });
         searchOptimalThresholdButton = (Button) bodyView.findViewById(R.id.searchOptimalThresholdButton);
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -194,6 +203,35 @@ public class HomeFragment extends Fragment {
                 startScan();
             }
         });
+    }
+
+    private void showDialogDbTolerance() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Set db tolerance (for experimented user)");
+
+        // Set up the input
+        final EditText input = new EditText(getContext());
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                rssiTolerance = input.getText().toString();
+                layoutStartStopProtection.setVisibility(View.VISIBLE);
+                rssiTextView.setText("Threshold: " + rssiTolerance);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
     }
 
     /**
