@@ -40,18 +40,6 @@ public class HomeFragment extends Fragment {
     private Button fastConnection;
     private ProgressBar scanProgressbar;
 
-    private LinearLayout layoutSelectFrequency;
-    private EditText frequencyEditText;
-
-    private LinearLayout layoutSearchOptimalThreshold;
-    private ProgressBar progressBarSearchOptimalThreshold;
-    private TextView rssiTextView;
-    private String rssiTolerance;
-    private Button searchOptimalThresholdButton;
-
-    private LinearLayout layoutStartStopProtection;
-    private BootstrapButton startStopProtectionButton;
-
     public HomeFragment() {
     }
 
@@ -71,101 +59,7 @@ public class HomeFragment extends Fragment {
         scanProgressbar.setIndeterminate(true);
         scanProgressbar.setVisibility(GONE);
 
-        // -------------------- //
-
-        layoutSelectFrequency = (LinearLayout) bodyView.findViewById(R.id.frequency_select_layout);
-        layoutSelectFrequency.setVisibility(GONE);
-        frequencyEditText = (EditText) bodyView.findViewById(R.id.frequencyEditText);
-
-        // -------------------- //
-        layoutSearchOptimalThreshold = (LinearLayout) bodyView.findViewById(R.id.layout_search_optimal);
-        layoutSearchOptimalThreshold.setVisibility(GONE);
-        progressBarSearchOptimalThreshold = (ProgressBar) bodyView.findViewById(R.id.progressBarSearchOptimalThreshoold);
-        progressBarSearchOptimalThreshold.setVisibility(View.INVISIBLE);
-        rssiTextView = (TextView) bodyView.findViewById(R.id.rssiValuetextView);
-        rssiTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showDialogDbTolerance();
-            }
-        });
-        searchOptimalThresholdButton = (Button) bodyView.findViewById(R.id.searchOptimalThresholdButton);
-        searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startSearchOptimalThreshold();
-            }
-        });
-
-        // -------------------- //
-        layoutStartStopProtection = (LinearLayout) bodyView.findViewById(R.id.start_protection_layout);
-        layoutStartStopProtection.setVisibility(GONE);
-        startStopProtectionButton = (BootstrapButton) bodyView.findViewById(R.id.start_stop_protection_button);
-
-        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startProtection();
-
-            }
-        });
-
         return bodyView;
-    }
-
-    private void startProtection() {
-        startStopProtectionButton.setBackgroundColor(Color.RED);
-        startStopProtectionButton.setText("Stop protection");
-        HashMap<String, String> parameters = new HashMap<>();
-
-        parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
-        parameters.put(Parameter.RSSI_VALUE.toString(), rssiTolerance);
-        EventBus.getDefault().postSticky(new ActionEvent(Action.START_PROTECTION, parameters));
-        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopProtection();
-            }
-        });
-    }
-
-    private void stopProtection() {
-        startStopProtectionButton.setBackgroundColor(Color.GREEN);
-        startStopProtectionButton.setText("Start protection");
-        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
-        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startProtection();
-            }
-        });
-    }
-
-    private void startSearchOptimalThreshold() {
-        progressBarSearchOptimalThreshold.setVisibility(View.VISIBLE);
-        searchOptimalThresholdButton.setText("Stop Searching");
-        HashMap<String, String> parameters = new HashMap<>();
-
-        parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
-        EventBus.getDefault().postSticky(new ActionEvent(Action.START_SEARCH_THRESHOLD, parameters));
-        searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopSearchOptimalThreshold();
-            }
-        });
-    }
-
-    private void stopSearchOptimalThreshold() {
-        progressBarSearchOptimalThreshold.setVisibility(View.GONE);
-        searchOptimalThresholdButton.setText("Search Optimal Threshold");
-        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_SEARCH_THRESHOLD, ""));
-        searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startSearchOptimalThreshold();
-            }
-        });
     }
 
     @Override
@@ -205,34 +99,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void showDialogDbTolerance() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Set db tolerance (for experimented user)");
 
-        // Set up the input
-        final EditText input = new EditText(getContext());
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_SIGNED);
-        builder.setView(input);
-
-        // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                rssiTolerance = input.getText().toString();
-                layoutStartStopProtection.setVisibility(View.VISIBLE);
-                rssiTextView.setText("Threshold: " + rssiTolerance);
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
 
     /**
      * Used by EventBus
@@ -254,8 +121,6 @@ public class HomeFragment extends Fragment {
             case CONNECTED: {
                 scanProgressbar.setVisibility(GONE);
                 fastConnection.setText("Disconnect");
-                layoutSelectFrequency.setVisibility(View.VISIBLE);
-                layoutSearchOptimalThreshold.setVisibility(View.VISIBLE);
                 fastConnection.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -265,31 +130,12 @@ public class HomeFragment extends Fragment {
                 break;
             }
             case DISCONNECTED: {
-                layoutSelectFrequency.setVisibility(View.GONE);
-                layoutSearchOptimalThreshold.setVisibility(View.GONE);
-                layoutStartStopProtection.setVisibility(View.GONE);
                 fastConnection.setText("Fast connection");
 
                 fastConnection.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         startScan();
-                    }
-                });
-                break;
-            }
-            case SEARCH_OPTIMAL_PEAK_DONE:
-            {
-                progressBarSearchOptimalThreshold.setVisibility(View.GONE);
-                layoutStartStopProtection.setVisibility(View.VISIBLE);
-                searchOptimalThresholdButton.setText("Search Optimal Threshold");
-                String rssi = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
-                rssiTolerance = rssi;
-                rssiTextView.setText("Threshold: " + rssi);
-                searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        startSearchOptimalThreshold();
                     }
                 });
                 break;

@@ -7,5 +7,7 @@ package com.example.aventador.protectalarm.events;
 public enum State {
     CONNECTED,
     DISCONNECTED,
-    SEARCH_OPTIMAL_PEAK_DONE;
+    SEARCH_OPTIMAL_PEAK_DONE,
+    FREQUENCY_SELECTED,
+    DB_TOLERANCE_SELECTED;
 }

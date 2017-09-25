@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -67,12 +68,15 @@ public class Main2Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mSectionsPagerAdapter.addFragment(new HomeFragment(), "Pairing");
+        mSectionsPagerAdapter.addFragment(new ThresholdFragment(), "Threshold Finder");
+        mSectionsPagerAdapter.addFragment(new GuardianFragment(), "Protection");
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -149,6 +153,7 @@ public class Main2Activity extends AppCompatActivity {
                 ThresholdFinder.getInstance().find(this, frequency, new GollumCallbackGetInteger() {
                     @Override
                     public void done(int rssi) {
+                        Log.d(TAG, "Threshold found");
                         HashMap<String, String> parameter = new HashMap<String, String>();
                         parameter.put(Parameter.RSSI_VALUE.toString(), String.valueOf(rssi));
                         EventBus.getDefault().postSticky(new StateEvent(State.SEARCH_OPTIMAL_PEAK_DONE, parameter));
@@ -207,6 +212,7 @@ public class Main2Activity extends AppCompatActivity {
             }
         }
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
