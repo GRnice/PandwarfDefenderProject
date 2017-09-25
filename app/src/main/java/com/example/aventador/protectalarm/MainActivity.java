@@ -9,6 +9,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
@@ -25,6 +26,7 @@ import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.process.Scanner;
 import com.example.aventador.protectalarm.process.ThresholdFinder;
+import com.example.aventador.protectalarm.process.WatchMan;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
 
     final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
+    private static final String TAG = "MainActivity";
 
     @Override
     @CallSuper
@@ -118,6 +121,28 @@ public class MainActivity extends AppCompatActivity {
             }
             case STOP_SEARCH_THRESHOLD: {
                 ThresholdFinder.getInstance().stopSpecan(this);
+                break;
+            }
+            case START_PROTECTION: {
+                String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
+                String dbTolerance =  actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
+                WatchMan.getInstance().start(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+                        Log.d(TAG, "Attack detected");
+                    }
+                });
+                Toast toast = Toast.makeText(this, "protection started\n frequency: " + frequency + ", db tolerance: " + dbTolerance, Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toast.show();
+                break;
+            }
+            case STOP_PROTECTION: {
+                WatchMan.getInstance().stop(this);
+                Log.d(TAG, "WatchMan stopped");
+                Toast toast = Toast.makeText(this, "protection stopped", Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toast.show();
                 break;
             }
         }

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 public class ThresholdFinder {
-    private static int DELAY_PACKETS_RSSI_MS = 50;
+    private static int DELAY_PACKETS_RSSI_MS = 700;
     private AsyncSearchOptimalPeak asyncSearchOptimalPeak = null;
     private AtomicBoolean specanRunning;
     private static ThresholdFinder instance;
@@ -49,7 +49,14 @@ public class ThresholdFinder {
         }
         specanRunning.set(true);
         asyncSearchOptimalPeak = new AsyncSearchOptimalPeak(activity, Integer.valueOf(frequency), cbDone);
-        asyncSearchOptimalPeak.execute();
+        GollumDongle.getInstance(activity).rfSpecanStart(0, Integer.valueOf(frequency), 2, 2, DELAY_PACKETS_RSSI_MS, new GollumCallbackGetInteger() {
+            @Override
+            public void done(int i) {
+                Log.d("ThresholdFinder", "specan started");
+                asyncSearchOptimalPeak.execute();
+            }
+        });
+
     }
 
     public void stopSpecan(Activity activity) {
@@ -77,10 +84,10 @@ public class ThresholdFinder {
             this.activity = activity;
             this.cbSearchDone = cbSearchDone;
         }
+
         @Override
         protected Object doInBackground(Object[] objects) {
             Log.d("ThresholdFinder", "start asynctask");
-            GollumDongle.getInstance(activity).rfSpecanStart(0, frequency, 2, 2, DELAY_PACKETS_RSSI_MS);
             final int minRssi = -120;
             final int maxRssi = 0;
             int currentRssi = minRssi;
@@ -118,7 +125,6 @@ public class ThresholdFinder {
                     cbSearchDone.done(finalRssi);
                 }
             });
-
             return null;
         }
     }

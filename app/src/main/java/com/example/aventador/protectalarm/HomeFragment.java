@@ -1,5 +1,6 @@
 package com.example.aventador.protectalarm;
 
+import android.graphics.Color;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -7,10 +8,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.beardedhen.androidbootstrap.BootstrapButton;
+import com.beardedhen.androidbootstrap.BootstrapButtonGroup;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Event;
@@ -34,11 +38,16 @@ public class HomeFragment extends Fragment {
     private ProgressBar scanProgressbar;
 
     private LinearLayout layoutSelectFrequency;
+    private EditText frequencyEditText;
 
     private LinearLayout layoutSearchOptimalThreshold;
     private ProgressBar progressBarSearchOptimalThreshold;
     private TextView rssiTextView;
+    private String rssiTolerance;
     private Button searchOptimalThresholdButton;
+
+    private LinearLayout layoutStartStopProtection;
+    private BootstrapButton startStopProtectionButton;
 
     public HomeFragment() {
     }
@@ -63,6 +72,7 @@ public class HomeFragment extends Fragment {
 
         layoutSelectFrequency = (LinearLayout) bodyView.findViewById(R.id.frequency_select_layout);
         layoutSelectFrequency.setVisibility(GONE);
+        frequencyEditText = (EditText) bodyView.findViewById(R.id.frequencyEditText);
 
         // -------------------- //
         layoutSearchOptimalThreshold = (LinearLayout) bodyView.findViewById(R.id.layout_search_optimal);
@@ -78,14 +88,56 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        // -------------------- //
+        layoutStartStopProtection = (LinearLayout) bodyView.findViewById(R.id.start_protection_layout);
+        layoutStartStopProtection.setVisibility(GONE);
+        startStopProtectionButton = (BootstrapButton) bodyView.findViewById(R.id.start_stop_protection_button);
+
+        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startProtection();
+
+            }
+        });
+
         return bodyView;
+    }
+
+    private void startProtection() {
+        startStopProtectionButton.setBackgroundColor(Color.RED);
+        startStopProtectionButton.setText("Stop protection");
+        HashMap<String, String> parameters = new HashMap<>();
+
+        parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
+        parameters.put(Parameter.RSSI_VALUE.toString(), rssiTolerance);
+        EventBus.getDefault().postSticky(new ActionEvent(Action.START_PROTECTION, parameters));
+        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopProtection();
+            }
+        });
+    }
+
+    private void stopProtection() {
+        startStopProtectionButton.setBackgroundColor(Color.GREEN);
+        startStopProtectionButton.setText("Start protection");
+        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
+        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startProtection();
+            }
+        });
     }
 
     private void startSearchOptimalThreshold() {
         progressBarSearchOptimalThreshold.setVisibility(View.VISIBLE);
         searchOptimalThresholdButton.setText("Stop Searching");
         HashMap<String, String> parameters = new HashMap<>();
-        parameters.put(Parameter.FREQUENCY.toString(), "433000000");
+
+        parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
         EventBus.getDefault().postSticky(new ActionEvent(Action.START_SEARCH_THRESHOLD, parameters));
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,6 +229,7 @@ public class HomeFragment extends Fragment {
             case DISCONNECTED: {
                 layoutSelectFrequency.setVisibility(View.GONE);
                 layoutSearchOptimalThreshold.setVisibility(View.GONE);
+                layoutStartStopProtection.setVisibility(View.GONE);
                 fastConnection.setText("Fast connection");
 
                 fastConnection.setOnClickListener(new View.OnClickListener() {
@@ -190,8 +243,10 @@ public class HomeFragment extends Fragment {
             case SEARCH_OPTIMAL_PEAK_DONE:
             {
                 progressBarSearchOptimalThreshold.setVisibility(View.GONE);
+                layoutStartStopProtection.setVisibility(View.VISIBLE);
                 searchOptimalThresholdButton.setText("Search Optimal Threshold");
                 String rssi = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
+                rssiTolerance = rssi;
                 rssiTextView.setText("Threshold: " + rssi);
                 searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
                     @Override
