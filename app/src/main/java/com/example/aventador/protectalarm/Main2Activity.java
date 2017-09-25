@@ -1,19 +1,28 @@
 package com.example.aventador.protectalarm;
 
 import android.*;
-import android.Manifest;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
@@ -30,22 +39,48 @@ import com.example.aventador.protectalarm.process.WatchMan;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity {
+public class Main2Activity extends AppCompatActivity {
 
-    final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
-    private static final String TAG = "MainActivity";
+    private static final int REQUEST_CODE_ASK_PERMISSIONS = 123;
+    private static final String TAG = "Main2Activity";
+    /**
+     * The {@link android.support.v4.view.PagerAdapter} that will provide
+     * fragments for each of the sections. We use a
+     * {@link FragmentPagerAdapter} derivative, which will keep every
+     * loaded fragment in memory. If this becomes too memory intensive, it
+     * may be best to switch to a
+     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
+     */
+    private SectionsPagerAdapter mSectionsPagerAdapter;
+
+    /**
+     * The {@link ViewPager} that will host the section contents.
+     */
+    private ViewPager mViewPager;
 
     @Override
-    @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main2);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        // Create the adapter that will return a fragment for each of the three
+        // primary sections of the activity.
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mSectionsPagerAdapter.addFragment(new HomeFragment(), "Pairing");
+
+        // Set up the ViewPager with the sections adapter.
+        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.setOffscreenPageLimit(mViewPager.getAdapter().getCount());
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(mViewPager);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         EventBus.getDefault().register(this);
+
     }
 
     @Override
@@ -65,10 +101,11 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().unregister(this);
     }
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_main2, menu);
         return true;
     }
 
@@ -84,9 +121,9 @@ public class MainActivity extends AppCompatActivity {
                 Scanner scanner = Scanner.getInstance();
                 final String bleAddressTarget = actionEvent.getParameters().getString(Action.CONNECT.toString());
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.BLUETOOTH},
+                    requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                    android.Manifest.permission.BLUETOOTH},
                             REQUEST_CODE_ASK_PERMISSIONS);
                 }
 
@@ -184,5 +221,47 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
+     * one of the sections/tabs/pages.
+     */
+    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+        private ArrayList<Fragment> listOfFragments;
+        private ArrayList<String> listOfTitle;
+
+        public SectionsPagerAdapter(FragmentManager fm) {
+            super(fm);
+            listOfFragments = new ArrayList<>();
+            listOfTitle = new ArrayList<>();
+        }
+
+        public void addFragment(Fragment fragment, String title) {
+            this.listOfFragments.add(fragment);
+            this.listOfTitle.add(title);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            // getItem is called to instantiate the fragment for the given page.
+            // Return a PlaceholderFragment (defined as a static inner class below).
+            return this.listOfFragments.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            // Show 3 total pages.
+            return this.listOfFragments.size();
+        }
+
+        @Override
+        public String getPageTitle(int position) {
+            if (this.listOfFragments.size() > position) {
+                return this.listOfTitle.get(position);
+            }
+            return null;
+        }
     }
 }

@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.example.aventador.protectalarm.HomeFragment"
-    tools:showIn="@layout/activity_main"
     android:weightSum="10">
 
     <LinearLayout
