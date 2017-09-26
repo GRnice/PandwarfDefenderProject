@@ -31,7 +31,7 @@
             android:ems="10"
             android:id="@+id/frequencyEditText"
             android:layout_weight="7"
-            android:text="433000000" />
+            android:text="433800000" />
     </LinearLayout>
 
     <LinearLayout

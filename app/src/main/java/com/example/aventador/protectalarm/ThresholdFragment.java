@@ -32,6 +32,7 @@ import com.example.aventador.protectalarm.tools.Tools;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.HashMap;
 
@@ -195,7 +196,7 @@ public class ThresholdFragment extends Fragment {
      * Called when a Publisher send a state.
      * @param stateEvent
      */
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
             case CONNECTED: {

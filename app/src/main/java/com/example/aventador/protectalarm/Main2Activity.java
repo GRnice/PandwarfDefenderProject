@@ -1,6 +1,5 @@
 package com.example.aventador.protectalarm;
 
-import android.*;
 import android.os.Build;
 import android.support.annotation.CallSuper;
 import android.support.design.widget.TabLayout;
@@ -16,14 +15,11 @@ import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
@@ -35,11 +31,11 @@ import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.process.Scanner;
-import com.example.aventador.protectalarm.process.ThresholdFinder;
 import com.example.aventador.protectalarm.process.WatchMan;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -153,28 +149,30 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             }
             case START_SEARCH_THRESHOLD: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                ThresholdFinder.getInstance().find(this, frequency, new GollumCallbackGetInteger() {
+                WatchMan.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetInteger() {
                     @Override
                     public void done(int rssi) {
                         Log.d(TAG, "Threshold found");
                         HashMap<String, String> parameter = new HashMap<String, String>();
                         parameter.put(Parameter.RSSI_VALUE.toString(), String.valueOf(rssi));
                         EventBus.getDefault().postSticky(new StateEvent(State.SEARCH_OPTIMAL_PEAK_DONE, parameter));
+                        WatchMan.getInstance().stopDiscovery(Main2Activity.this);
                     }
                 });
                 break;
             }
             case STOP_SEARCH_THRESHOLD: {
-                ThresholdFinder.getInstance().stopSpecan(this);
+                WatchMan.getInstance().stopDiscovery(this);
                 break;
             }
             case START_PROTECTION: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 String dbTolerance =  actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
-                WatchMan.getInstance().start(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+                WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
                         Log.d(TAG, "Attack detected");
+                        EventBus.getDefault().postSticky(new StateEvent(State.ATTACK_DETECTED, ""));
                     }
                 });
                 Toast toast = Toast.makeText(this, "protection started\n frequency: " + frequency + ", db tolerance: " + dbTolerance, Toast.LENGTH_SHORT);
@@ -183,7 +181,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
             }
             case STOP_PROTECTION: {
-                WatchMan.getInstance().stop(this);
+                WatchMan.getInstance().stopGuardian(this);
                 Log.d(TAG, "WatchMan stopped");
                 Toast toast = Toast.makeText(this, "protection stopped", Toast.LENGTH_SHORT);
                 toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
@@ -198,7 +196,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
      * Called when a Publisher send a state.
      * @param stateEvent
      */
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
             case CONNECTED: {
@@ -212,6 +210,11 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                 toast.show();
                 break;
+            }
+            case ATTACK_DETECTED: {
+                Toast toastAlert = Toast.makeText(Main2Activity.this, "Attack detected", Toast.LENGTH_SHORT);
+                toastAlert.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toastAlert.show();
             }
         }
     }

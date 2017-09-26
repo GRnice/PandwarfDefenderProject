@@ -36,7 +36,8 @@
                 android:inputType="numberSigned"
                 android:ems="10"
                 android:id="@+id/frequency_guardian_edittext"
-                android:layout_weight="5" />
+                android:layout_weight="5"
+                android:text="433800000" />
         </LinearLayout>
 
         <LinearLayout
