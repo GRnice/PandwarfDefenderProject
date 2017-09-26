@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -25,6 +27,8 @@ import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.tools.Logger;
+import com.example.aventador.protectalarm.tools.Tools;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -96,10 +100,33 @@ public class ThresholdFragment extends Fragment {
             }
         });
         searchOptimalThresholdButton = (Button) bodyView.findViewById(R.id.searchOptimalThresholdButton);
+        searchOptimalThresholdButton.setEnabled(false);
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startSearchOptimalThreshold();
+            }
+        });
+        frequencyEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String frequency = frequencyEditText.getText().toString();
+                if (Tools.isValidFrequency(frequency)) {
+                    Logger.d(TAG, "post new frequency");
+                    HashMap<String, String> parameters = new HashMap<String, String>();
+                    parameters.put(Parameter.FREQUENCY.toString(), frequency);
+                    EventBus.getDefault().postSticky(new StateEvent(State.FREQUENCY_SELECTED, parameters));
+                }
             }
         });
         return bodyView;
@@ -148,6 +175,9 @@ public class ThresholdFragment extends Fragment {
             public void onClick(DialogInterface dialog, int which) {
                 rssiTolerance = input.getText().toString();
                 rssiTextView.setText("Threshold: " + rssiTolerance);
+                HashMap<String, String> parameters = new HashMap<String, String>();
+                parameters.put(Parameter.RSSI_VALUE.toString(), rssiTolerance);
+                EventBus.getDefault().postSticky(new StateEvent(State.DB_TOLERANCE_SELECTED, parameters));
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -169,9 +199,11 @@ public class ThresholdFragment extends Fragment {
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
             case CONNECTED: {
+                searchOptimalThresholdButton.setEnabled(true);
                 break;
             }
             case DISCONNECTED: {
+                searchOptimalThresholdButton.setEnabled(false);
                 break;
             }
             case SEARCH_OPTIMAL_PEAK_DONE: {

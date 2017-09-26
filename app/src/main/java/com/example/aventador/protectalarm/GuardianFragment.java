@@ -74,6 +74,7 @@ public class GuardianFragment extends Fragment {
 
             }
         });
+        startStopProtectionButton.setEnabled(false);
         return bodyView;
     }
 
@@ -123,9 +124,11 @@ public class GuardianFragment extends Fragment {
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
             case CONNECTED: {
+                startStopProtectionButton.setEnabled(true);
                 break;
             }
             case DISCONNECTED: {
+                startStopProtectionButton.setEnabled(false);
                 break;
             }
             case FREQUENCY_SELECTED: {
