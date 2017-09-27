@@ -30,8 +30,10 @@ import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.process.Jammer;
 import com.example.aventador.protectalarm.process.Scanner;
 import com.example.aventador.protectalarm.process.WatchMan;
+import com.example.aventador.protectalarm.tools.Logger;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -39,6 +41,8 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static com.example.aventador.protectalarm.events.State.ATTACK_DETECTED;
 
 public class Main2Activity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
 
@@ -93,6 +97,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         .setAction("Action", null).show();
             }
         });
+        Jammer.getInstance().init(this);
         EventBus.getDefault().register(this);
 
     }
@@ -112,13 +117,25 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         return true;
     }
 
+    private void startGuardian(final String frequency, final String dbTolerance) {
+        WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean b) {
+                HashMap<String, String> parameters = new HashMap<>();
+                parameters.put(Parameter.FREQUENCY.toString(), frequency);
+                parameters.put(Parameter.RSSI_VALUE.toString(), dbTolerance);
+                EventBus.getDefault().postSticky(new ActionEvent(Action.START_JAMMING, parameters));
+            }
+        });
+    }
+
     /**
      * Used by EventBus
      * Called when a Publisher send a action to be executed.
      * @param actionEvent
      */
-    @Subscribe
-    public void onMessageEvent(ActionEvent actionEvent) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(final ActionEvent actionEvent) {
         switch (actionEvent.getActionRequested()) {
             case CONNECT: {
                 Scanner scanner = Scanner.getInstance();
@@ -151,42 +168,82 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 WatchMan.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetInteger() {
                     @Override
-                    public void done(int rssi) {
+                    public void done(final int rssi) {
                         Log.d(TAG, "Threshold found");
-                        HashMap<String, String> parameter = new HashMap<String, String>();
-                        parameter.put(Parameter.RSSI_VALUE.toString(), String.valueOf(rssi));
-                        EventBus.getDefault().postSticky(new StateEvent(State.SEARCH_OPTIMAL_PEAK_DONE, parameter));
-                        WatchMan.getInstance().stopDiscovery(Main2Activity.this);
+
+                        WatchMan.getInstance().stopDiscovery(Main2Activity.this, new GollumCallbackGetBoolean() {
+                            @Override
+                            public void done(boolean b) {
+                                HashMap<String, String> parameter = new HashMap<String, String>();
+                                parameter.put(Parameter.RSSI_VALUE.toString(), String.valueOf(rssi));
+                                EventBus.getDefault().postSticky(new StateEvent(State.SEARCH_OPTIMAL_PEAK_DONE, parameter));
+                            }
+                        });
                     }
                 });
                 break;
             }
             case STOP_SEARCH_THRESHOLD: {
-                WatchMan.getInstance().stopDiscovery(this);
+                WatchMan.getInstance().stopDiscovery(this, new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+
+                    }
+                });
                 break;
             }
             case START_PROTECTION: {
-                String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
+                final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 String dbTolerance =  actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
-                WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean b) {
-                        Log.d(TAG, "Attack detected");
-                        EventBus.getDefault().postSticky(new StateEvent(State.ATTACK_DETECTED, ""));
-                    }
-                });
+                startGuardian(frequency, dbTolerance);
                 Toast toast = Toast.makeText(this, "protection started\n frequency: " + frequency + ", db tolerance: " + dbTolerance, Toast.LENGTH_SHORT);
                 toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                 toast.show();
                 break;
             }
             case STOP_PROTECTION: {
-                WatchMan.getInstance().stopGuardian(this);
-                Log.d(TAG, "WatchMan stopped");
-                Toast toast = Toast.makeText(this, "protection stopped", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-                toast.show();
+                WatchMan.getInstance().stopGuardian(this, new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+                        Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
+                            @Override
+                            public void done(boolean b) {
+                                Log.d(TAG, "WatchMan stopped");
+                                Toast toast = Toast.makeText(Main2Activity.this, "protection stopped", Toast.LENGTH_SHORT);
+                                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                                toast.show();
+                            }
+                        });
+
+                    }
+                });
+
                 break;
+            }
+            case START_JAMMING: {
+                Toast toastAlert = Toast.makeText(Main2Activity.this, "Attack detected", Toast.LENGTH_SHORT);
+                toastAlert.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                toastAlert.show();
+
+                Logger.d(TAG, "Attack detected");
+                WatchMan.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+                        final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
+                        final String dbTolerance = actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
+                        try {
+                            Thread.sleep(2000); // latency ... shit.
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        Jammer.getInstance().startJamming(Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
+                            @Override
+                            public void done(boolean b) {
+                                startGuardian(frequency, dbTolerance);
+                            }
+                        });
+                    }
+                });
             }
         }
     }
@@ -211,11 +268,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 toast.show();
                 break;
             }
-            case ATTACK_DETECTED: {
-                Toast toastAlert = Toast.makeText(Main2Activity.this, "Attack detected", Toast.LENGTH_SHORT);
-                toastAlert.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-                toastAlert.show();
-            }
+
         }
     }
 

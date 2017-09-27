@@ -129,12 +129,13 @@ public class WatchMan {
      *
      * @param activity
      */
-    private void stopSpecan(final Activity activity) {
+    private void stopSpecan(final Activity activity,final  GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stop specan");
         GollumDongle.getInstance(activity).rfSpecanStop(0, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
                 specanIsRunning = false;
+                cbStopDone.done(true);
             }
         });
     }
@@ -143,46 +144,46 @@ public class WatchMan {
      *
      * @param activity
      */
-    public boolean stopDiscovery(Activity activity) {
+    public void stopDiscovery(Activity activity, GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stop discovery");
         Logger.d(TAG, "discoveryIsRunning ? : " + discoverIsRunning.get());
         if (!discoverIsRunning.compareAndSet(true, false)) {
-            return false;
+            cbStopDone.done(false);
+            return ;
         }
-        if (discoverThread == null) {
-            stopSpecan(activity);
-            return true;
+        if (discoverThread != null) {
+            discoverThread.kill();
+            try {
+                discoverThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        discoverThread.kill();
-        stopSpecan(activity);
-        try {
-            discoverThread.join();
-            return true;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return false;
-        }
+
+        stopSpecan(activity, cbStopDone);
+
     }
 
-    public boolean stopGuardian(final Activity activity) {
+    public void stopGuardian(final Activity activity, GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stopGuardian()");
         Logger.d(TAG, "guardianIsRunning ? : " + guardianIsRunning.get());
         if (!guardianIsRunning.compareAndSet(true, false)) {
-            return false;
+            cbStopDone.done(false);
+            return;
         }
-        if (guardianThread == null) {
-            stopSpecan(activity);
-            return true;
+        if (guardianThread != null) {
+            guardianThread.kill();
+            try {
+                Logger.d(TAG, "join requested");
+                guardianThread.join();
+                Logger.d(TAG, "join done");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        guardianThread.kill();
-        stopSpecan(activity);
-        try {
-            guardianThread.join();
-            return true;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return false;
-        }
+
+        stopSpecan(activity, cbStopDone);
+
     }
 
     private class DiscoverThread extends Thread {
