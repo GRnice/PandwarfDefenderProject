@@ -18,6 +18,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Aventador on 25/09/2017.
  */
 
+/**
+ * WatchMan is responsible for :
+ *                              calculating the tolerance threshold making it possible to distinguish a brute force attack.
+ *                              monitor if an attack is in progress.
+ */
 public class WatchMan {
 
     private static int DELAY_PACKETS_RSSI_MS = 100;
@@ -28,16 +33,17 @@ public class WatchMan {
     /*
     For Guardian mode
      */
-    private static int GUARDIAN_NB_SEQUENCES = 40;
+    private static int GUARDIAN_NB_SEQUENCES = 40; // one sequence -> 20 scans.
     private static int PEAK_TOLERANCE = 20; // interval -> [1 , GUARDIAN_NB_SCAN_BY_SEQUENCE] in one sequence, if number of anormal peack is better than PEAK_TOLERANCE
                                             // it's a brute force attack.
-    private static double MARGIN_ERROR = 0.1;
                                             // TODO: PEAK_TOLERANCE should be represented by a seek bar.
+    private static double MARGIN_ERROR = 0.1; // If the Peak detected is better than PEAK_TOLERANCE (10% of PEAK_TOLERANCE) it's a potential brute force attack
+
 
     /*
     For discovery mode
      */
-    private static int DISCOVERY_NB_SEQUENCES = 8; // 20 sequences of scan will be executed
+    private static int DISCOVERY_NB_SEQUENCES = 8; // 8 sequences of scan will be executed
 
     private static WatchMan instance;
     private AtomicBoolean guardianIsRunning;
@@ -92,7 +98,7 @@ public class WatchMan {
      * @param cbDiscoveryDone
      * @return
      */
-    public boolean startDiscovery(final Activity activity, final int frequency, final GollumCallbackGetInteger cbDiscoveryDone) {
+    public boolean startDiscovery(final Activity activity, int frequency, final GollumCallbackGetInteger cbDiscoveryDone) {
         Logger.d(TAG, "guardianIsRunning.get():" + guardianIsRunning.get() + " discoverIsRunning ?: " + discoverIsRunning.get() + " specan run:" + specanIsRunning);
         if (guardianIsRunning.get() || !discoverIsRunning.compareAndSet(false, true) || specanIsRunning) {
             return false;
@@ -101,7 +107,7 @@ public class WatchMan {
         startSpecan(activity, frequency, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
-                discoverThread = new DiscoverThread(activity, frequency, cbDiscoveryDone);
+                discoverThread = new DiscoverThread(activity, cbDiscoveryDone);
                 discoverThread.start();
             }
         });
@@ -186,17 +192,18 @@ public class WatchMan {
 
     }
 
+    /**
+     * This Thread is responsible for calculating the tolerance threshold making it possible to distinguish a brute force attack.
+     */
     private class DiscoverThread extends Thread {
         private GollumCallbackGetInteger cbDone;
         private Activity activity;
         private ArrayList<Integer> allMeans;
         private AtomicBoolean run;
-        private int frequencyTarget;
         // a bucket represent the mean of a sequence of scans. In this case, for each bucket, 4 scan will be executed (scan is a getRssi())
 
-        public DiscoverThread(Activity activity, int frequencyTarget, GollumCallbackGetInteger cbDone) {
+        public DiscoverThread(Activity activity, GollumCallbackGetInteger cbDone) {
             this.activity = activity;
-            this.frequencyTarget = frequencyTarget;
             this.cbDone = cbDone;
             this.allMeans = new ArrayList<>();
             this.run = new AtomicBoolean(false);
@@ -267,6 +274,9 @@ public class WatchMan {
         }
     }
 
+    /**
+     * This thread is reponsible for monitor if an attack is in progress.
+     */
     private class GuardianThread extends Thread {
 
         private int dbTolerance;

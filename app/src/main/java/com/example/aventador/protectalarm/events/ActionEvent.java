@@ -9,6 +9,12 @@ import java.util.Iterator;
  * Created by Aventador on 21/09/2017.
  */
 
+/**
+ * ActionEvent is used by EventBus. an ActionEvent is broadcast when a action is requested. (CONNECTION, START_PROTECTION, etc...)
+ *
+ * The difference between {@link ActionEvent} and {@link StateEvent} is that ActionEvent is a request to be executed
+ * StateEvent is just an information broadcasted (Frequency changed, pandwarf dongle connected/disconnected, ...)
+ */
 public class ActionEvent extends Event<Action> {
 
     /**
