@@ -11,7 +11,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.beardedhen.androidbootstrap.BootstrapBadge;
 import com.beardedhen.androidbootstrap.BootstrapButton;
+import com.beardedhen.androidbootstrap.api.attributes.BootstrapBrand;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
@@ -80,7 +82,7 @@ public class GuardianFragment extends Fragment {
     }
 
     private void startProtection() {
-        startStopProtectionButton.setBackgroundColor(Color.RED);
+        startStopProtectionButton.setBackgroundColor(0xFFD9534F); // warning color
         startStopProtectionButton.setText("Stop protection");
         HashMap<String, String> parameters = new HashMap<>();
 
@@ -96,7 +98,7 @@ public class GuardianFragment extends Fragment {
     }
 
     private void stopProtection() {
-        startStopProtectionButton.setBackgroundColor(Color.GREEN);
+        startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
         startStopProtectionButton.setText("Start protection");
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
@@ -140,6 +142,12 @@ public class GuardianFragment extends Fragment {
             case SEARCH_OPTIMAL_PEAK_DONE: {
                 String dbTolerance  = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                 this.dbToleranceEditText.setText(dbTolerance);
+                break;
+            }
+            case PROTECTION_FAIL: {
+                startStopProtectionButton.setEnabled(true);
+                startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
+                startStopProtectionButton.setText("Start protection");
                 break;
             }
         }

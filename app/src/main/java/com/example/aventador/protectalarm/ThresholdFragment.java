@@ -221,6 +221,17 @@ public class ThresholdFragment extends Fragment {
                 });
                 break;
             }
+            case SEARCH_OPTIMAL_PEAK_FAIL: {
+                progressBarSearchOptimalThreshold.setVisibility(View.GONE);
+                searchOptimalThresholdButton.setText("Search Optimal Threshold");
+                searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startSearchOptimalThreshold();
+                    }
+                });
+                break;
+            }
         }
     }
 }

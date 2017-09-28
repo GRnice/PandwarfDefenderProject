@@ -43,6 +43,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.example.aventador.protectalarm.events.State.ATTACK_DETECTED;
+import static com.example.aventador.protectalarm.events.State.PROTECTION_FAIL;
+import static com.example.aventador.protectalarm.events.State.SEARCH_OPTIMAL_PEAK_FAIL;
 
 public class Main2Activity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
 
@@ -118,7 +120,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     }
 
     private void startGuardian(final String frequency, final String dbTolerance) {
-        WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+        boolean startSuccess = WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 HashMap<String, String> parameters = new HashMap<>();
@@ -127,6 +129,13 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 EventBus.getDefault().postSticky(new ActionEvent(Action.START_JAMMING, parameters));
             }
         });
+
+        if (!startSuccess) {
+            Toast error = Toast.makeText(this, "One process at a time", Toast.LENGTH_SHORT);
+            error.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            error.show();
+            EventBus.getDefault().postSticky(new StateEvent(PROTECTION_FAIL, ""));
+        }
     }
 
     /**
@@ -166,11 +175,10 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             }
             case START_SEARCH_THRESHOLD: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                WatchMan.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetInteger() {
+                boolean startSuccess = WatchMan.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetInteger() {
                     @Override
                     public void done(final int rssi) {
                         Log.d(TAG, "Threshold found");
-
                         WatchMan.getInstance().stopDiscovery(Main2Activity.this, new GollumCallbackGetBoolean() {
                             @Override
                             public void done(boolean b) {
@@ -181,6 +189,15 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         });
                     }
                 });
+
+                if (!startSuccess) {
+                    Toast error = Toast.makeText(this, "One process at a time", Toast.LENGTH_SHORT);
+                    error.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                    error.show();
+
+                    EventBus.getDefault().postSticky(new StateEvent(SEARCH_OPTIMAL_PEAK_FAIL, ""));
+                }
+
                 break;
             }
             case STOP_SEARCH_THRESHOLD: {
@@ -229,16 +246,23 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 WatchMan.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
+                        Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
                         final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                         final String dbTolerance = actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                         try {
-                            Thread.sleep(2000); // latency ... shit.
+                            Thread.sleep(1000); // latency ... shit.
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         Jammer.getInstance().startJamming(Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
                             @Override
                             public void done(boolean b) {
+                                try {
+                                    Thread.sleep(1000); // latency ... shit.
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
                                 startGuardian(frequency, dbTolerance);
                             }
                         });
@@ -268,7 +292,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 toast.show();
                 break;
             }
-
         }
     }
 

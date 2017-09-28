@@ -22,6 +22,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * WatchMan is responsible for :
  *                              calculating the tolerance threshold making it possible to distinguish a brute force attack.
  *                              monitor if an attack is in progress.
+ *
+ * It's impossible to start specan if jamming is running.
+ * It's impossible to start jamming if specan is running.
+ * It's impossible to start specan if the pandwarf has not stop correctly jamming or previous specan.
+ * It's impossible to start jamming if the pandwarf has not stop correctly jamming or previous specan.
  */
 public class WatchMan {
 
@@ -77,7 +82,7 @@ public class WatchMan {
      */
     public boolean startGuardian(final Activity activity, final int frequency, final int dbTolerance, final GollumCallbackGetBoolean cbAttackDetected) {
         Logger.d(TAG, "discoverIsRunning.get():" + discoverIsRunning.get() + " guardianIsRunning ?: " + guardianIsRunning.get() + " specan run:" + specanIsRunning);
-        if (discoverIsRunning.get() || !guardianIsRunning.compareAndSet(false, true) || specanIsRunning) {
+        if (!isAvailableForNewStart() || !guardianIsRunning.compareAndSet(false, true)) {
             return false;
         }
         Logger.d(TAG, "Start Guardian");
@@ -159,11 +164,6 @@ public class WatchMan {
         }
         if (discoverThread != null) {
             discoverThread.kill();
-            try {
-                discoverThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
 
         stopSpecan(activity, cbStopDone);
@@ -179,17 +179,42 @@ public class WatchMan {
         }
         if (guardianThread != null) {
             guardianThread.kill();
-            try {
-                Logger.d(TAG, "join requested");
-                guardianThread.join();
-                Logger.d(TAG, "join done");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
 
         stopSpecan(activity, cbStopDone);
 
+    }
+
+    /**
+     * Indicate if the dongle has stopped specan
+     * @return
+     */
+    public boolean specanIsRunning() {
+        return specanIsRunning;
+    }
+
+    /**
+     * Indicate if the discovery thread is running
+     * @return
+     */
+    public boolean discoveryProcessIsRunning() {
+        return discoverIsRunning.get();
+    }
+
+    /**
+     * Indicate if the gardian thread is running
+     * @return
+     */
+    public boolean guardianProcessIsRunning() {
+        return guardianIsRunning.get();
+    }
+
+    /**
+     * Indicate if user can call startDiscovery or startGuardian
+     * @return
+     */
+    public boolean isAvailableForNewStart() {
+        return (!specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning());
     }
 
     /**
