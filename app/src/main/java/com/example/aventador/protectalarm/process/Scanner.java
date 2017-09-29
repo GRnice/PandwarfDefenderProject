@@ -84,7 +84,7 @@ public class Scanner {
      * @param activity
      */
     public void stopConnect(final Activity activity) {
-        if (scanRunning.get()) {
+        if (scanRunning.compareAndSet(true, false)) {
             GollumDongle.getInstance(activity).stopSearchDevice();
         }
     }

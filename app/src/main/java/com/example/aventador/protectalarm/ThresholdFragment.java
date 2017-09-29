@@ -205,6 +205,14 @@ public class ThresholdFragment extends Fragment {
             }
             case DISCONNECTED: {
                 searchOptimalThresholdButton.setEnabled(false);
+                searchOptimalThresholdButton.setText("Search Optimal Threshold");
+                progressBarSearchOptimalThreshold.setVisibility(View.GONE);
+                searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startSearchOptimalThreshold();
+                    }
+                });
                 break;
             }
             case SEARCH_OPTIMAL_PEAK_DONE: {

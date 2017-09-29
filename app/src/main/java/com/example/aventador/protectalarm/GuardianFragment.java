@@ -132,6 +132,14 @@ public class GuardianFragment extends Fragment {
             }
             case DISCONNECTED: {
                 startStopProtectionButton.setEnabled(false);
+                startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
+                startStopProtectionButton.setText("Start protection");
+                startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startProtection();
+                    }
+                });
                 break;
             }
             case FREQUENCY_SELECTED: {

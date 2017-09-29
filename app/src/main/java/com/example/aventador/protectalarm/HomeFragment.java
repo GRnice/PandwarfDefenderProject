@@ -1,5 +1,6 @@
 package com.example.aventador.protectalarm;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.annotation.CallSuper;
@@ -7,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.InputType;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +17,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.beardedhen.androidbootstrap.BootstrapButtonGroup;
@@ -23,6 +26,7 @@ import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Event;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.tools.Logger;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -38,6 +42,7 @@ import static com.example.aventador.protectalarm.events.Action.STOP_CONNECT;
  */
 public class HomeFragment extends Fragment {
 
+    private static final String TAG = "HomeFragment";
     private Button fastConnection;
     private ProgressBar scanProgressbar;
 
@@ -78,6 +83,12 @@ public class HomeFragment extends Fragment {
     }
 
     private void startScan() {
+        if (BluetoothAdapter.getDefaultAdapter().getState() != BluetoothAdapter.STATE_ON) {
+            Toast toast = Toast.makeText(getContext(), "Bluetooth must be started", Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            toast.show();
+            return;
+        }
         EventBus.getDefault().postSticky(new ActionEvent(Action.CONNECT, "EC:5A:4E:57:AD:99"));
         scanProgressbar.setVisibility(View.VISIBLE);
         fastConnection.setText("STOP CONNECTION");
@@ -92,6 +103,7 @@ public class HomeFragment extends Fragment {
     private void stopScan() {
         scanProgressbar.setVisibility(View.INVISIBLE);
         fastConnection.setText("Fast connection");
+        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_CONNECT, ""));
         fastConnection.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,8 +130,10 @@ public class HomeFragment extends Fragment {
      */
     @Subscribe(threadMode =  ThreadMode.MAIN)
     public void onMessageEvent(StateEvent stateEvent) {
+        Logger.d(TAG, "onMessageEvent: State Event: " + stateEvent.getState());
         switch (stateEvent.getState()) {
             case CONNECTED: {
+                Logger.d(TAG, "CONNECTED");
                 scanProgressbar.setVisibility(GONE);
                 fastConnection.setText("Disconnect");
                 fastConnection.setOnClickListener(new View.OnClickListener() {
@@ -131,6 +145,7 @@ public class HomeFragment extends Fragment {
                 break;
             }
             case DISCONNECTED: {
+                Logger.d(TAG, "DISCONNECTED");
                 fastConnection.setText("Fast connection");
 
                 fastConnection.setOnClickListener(new View.OnClickListener() {

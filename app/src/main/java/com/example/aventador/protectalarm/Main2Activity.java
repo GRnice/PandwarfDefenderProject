@@ -1,5 +1,6 @@
 package com.example.aventador.protectalarm;
 
+import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
 import android.support.annotation.CallSuper;
 import android.support.design.widget.TabLayout;
@@ -25,6 +26,7 @@ import android.widget.Toast;
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
+import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.example.aventador.protectalarm.events.State.ATTACK_DETECTED;
+import static com.example.aventador.protectalarm.events.State.DISCONNECTED;
 import static com.example.aventador.protectalarm.events.State.PROTECTION_FAIL;
 import static com.example.aventador.protectalarm.events.State.SEARCH_OPTIMAL_PEAK_FAIL;
 
@@ -65,6 +68,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
      */
     private ViewPager mViewPager;
     private FloatingActionButton fab;
+    private int bluetoothState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,9 +103,62 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         .setAction("Action", null).show();
             }
         });
+        bluetoothState = BluetoothAdapter.getDefaultAdapter().getState();
+        BluetoothReceiver.getInstance().register(this, new GollumCallbackGetInteger() {
+            @Override
+            public void done(int state) {
+                newStateDetected(state);
+            }
+        });
         Jammer.getInstance().init(this);
         EventBus.getDefault().register(this);
 
+    }
+
+    private void newStateDetected(int state) {
+        bluetoothState = state;
+        switch (state) {
+            case BluetoothAdapter.STATE_OFF:
+                //Indicates the local Bluetooth adapter is off.
+                break;
+
+            case BluetoothAdapter.STATE_TURNING_ON:
+                //Indicates the local Bluetooth adapter is turning on. However local clients should wait for STATE_ON before attempting to use the adapter.
+                break;
+
+            case BluetoothAdapter.STATE_ON:
+                //Indicates the local Bluetooth adapter is on, and ready for use.
+                break;
+
+            case BluetoothAdapter.STATE_TURNING_OFF:
+                killAllProcess();
+                EventBus.getDefault().postSticky(new StateEvent(DISCONNECTED, ""));
+                //Indicates the local Bluetooth adapter is turning off. Local clients should immediately attempt graceful disconnection of any remote links.
+                break;
+        }
+    }
+
+    /**
+     * Kill all process, scan, threshold discovery, protection, jamming
+     */
+    public void killAllProcess() {
+        Scanner.getInstance().stopConnect(this);
+        WatchMan.getInstance().stopDiscovery(this, new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean b) {
+                WatchMan.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+                        Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
+                            @Override
+                            public void done(boolean b) {
+
+                            }
+                        });
+                    }
+                });
+            }
+        });
     }
 
     @Override
@@ -154,6 +211,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                                     android.Manifest.permission.ACCESS_FINE_LOCATION,
                                     android.Manifest.permission.BLUETOOTH},
                             REQUEST_CODE_ASK_PERMISSIONS);
+                    return;
                 }
 
                 scanner.connect(this, bleAddressTarget, new GollumCallbackGetBoolean() {
