@@ -1,30 +1,23 @@
 package com.example.aventador.protectalarm;
 
 import android.bluetooth.BluetoothAdapter;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.text.InputType;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.beardedhen.androidbootstrap.BootstrapButton;
-import com.beardedhen.androidbootstrap.BootstrapButtonGroup;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
-import com.example.aventador.protectalarm.events.Event;
-import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.tools.Logger;
 
@@ -32,10 +25,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.HashMap;
-
 import static android.view.View.GONE;
-import static com.example.aventador.protectalarm.events.Action.STOP_CONNECT;
+import static com.example.aventador.protectalarm.tools.Tools.isValidAddressMac;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -43,8 +34,9 @@ import static com.example.aventador.protectalarm.events.Action.STOP_CONNECT;
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
-    private Button fastConnection;
+    private Button connectionButton;
     private ProgressBar scanProgressbar;
+    private EditText addressMacEditText;
 
     public HomeFragment() {
     }
@@ -53,17 +45,43 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View bodyView = inflater.inflate(R.layout.fragment_home, container, false);
-        fastConnection = (Button) bodyView.findViewById(R.id.factConnectionButton);
-        fastConnection.setOnClickListener(new View.OnClickListener() {
+
+        scanProgressbar = (ProgressBar) bodyView.findViewById(R.id.scan_progressbar);
+        scanProgressbar.setIndeterminate(true);
+        scanProgressbar.setVisibility(GONE);
+
+        addressMacEditText = (EditText) bodyView.findViewById(R.id.addressMacEditText);
+        addressMacEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (isValidAddressMac(addressMacEditText.getText().toString())) {
+                    connectionButton.setVisibility(View.VISIBLE);
+                    addressMacEditText.setTextColor(Color.GREEN);
+                } else {
+                    connectionButton.setVisibility(View.INVISIBLE);
+                    addressMacEditText.setTextColor(Color.RED);
+                }
+            }
+        });
+
+        connectionButton = (Button) bodyView.findViewById(R.id.connection_button);
+        connectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScan();
             }
         });
-
-        scanProgressbar = (ProgressBar) bodyView.findViewById(R.id.scan_progressbar);
-        scanProgressbar.setIndeterminate(true);
-        scanProgressbar.setVisibility(GONE);
+        connectionButton.setVisibility(View.INVISIBLE);
 
         return bodyView;
     }
@@ -89,10 +107,10 @@ public class HomeFragment extends Fragment {
             toast.show();
             return;
         }
-        EventBus.getDefault().postSticky(new ActionEvent(Action.CONNECT, "EC:5A:4E:57:AD:99"));
+        EventBus.getDefault().postSticky(new ActionEvent(Action.CONNECT, addressMacEditText.getText().toString()));
         scanProgressbar.setVisibility(View.VISIBLE);
-        fastConnection.setText("STOP CONNECTION");
-        fastConnection.setOnClickListener(new View.OnClickListener() {
+        connectionButton.setText("STOP CONNECTION");
+        connectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 stopScan();
@@ -102,9 +120,9 @@ public class HomeFragment extends Fragment {
 
     private void stopScan() {
         scanProgressbar.setVisibility(View.INVISIBLE);
-        fastConnection.setText("Fast connection");
+        connectionButton.setText("connection");
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_CONNECT, ""));
-        fastConnection.setOnClickListener(new View.OnClickListener() {
+        connectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScan();
@@ -135,8 +153,8 @@ public class HomeFragment extends Fragment {
             case CONNECTED: {
                 Logger.d(TAG, "CONNECTED");
                 scanProgressbar.setVisibility(GONE);
-                fastConnection.setText("Disconnect");
-                fastConnection.setOnClickListener(new View.OnClickListener() {
+                connectionButton.setText("Disconnect");
+                connectionButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         EventBus.getDefault().postSticky(new ActionEvent(Action.DISCONNECT, ""));
@@ -146,9 +164,8 @@ public class HomeFragment extends Fragment {
             }
             case DISCONNECTED: {
                 Logger.d(TAG, "DISCONNECTED");
-                fastConnection.setText("Fast connection");
-
-                fastConnection.setOnClickListener(new View.OnClickListener() {
+                connectionButton.setText("connection");
+                connectionButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         startScan();

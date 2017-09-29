@@ -227,6 +227,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
             }
             case DISCONNECT: {
+                killAllProcess();
                 GollumDongle.getInstance(this).closeDevice();
                 EventBus.getDefault().postSticky(new StateEvent(State.DISCONNECTED, ""));
                 break;
