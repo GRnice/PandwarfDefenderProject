@@ -191,6 +191,18 @@ public class ThresholdFragment extends Fragment {
         builder.show();
     }
 
+    public void resetFragment() {
+        searchOptimalThresholdButton.setEnabled(false);
+        searchOptimalThresholdButton.setText("Search Optimal Threshold");
+        progressBarSearchOptimalThreshold.setVisibility(View.GONE);
+        searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startSearchOptimalThreshold();
+            }
+        });
+    }
+
     /**
      * Used by EventBus
      * Called when a Publisher send a state.
@@ -200,44 +212,25 @@ public class ThresholdFragment extends Fragment {
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
             case CONNECTED: {
+                resetFragment();
                 searchOptimalThresholdButton.setEnabled(true);
                 break;
             }
             case DISCONNECTED: {
-                searchOptimalThresholdButton.setEnabled(false);
-                searchOptimalThresholdButton.setText("Search Optimal Threshold");
-                progressBarSearchOptimalThreshold.setVisibility(View.GONE);
-                searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        startSearchOptimalThreshold();
-                    }
-                });
+                resetFragment();
                 break;
             }
             case SEARCH_OPTIMAL_PEAK_DONE: {
-                progressBarSearchOptimalThreshold.setVisibility(View.GONE);
-                searchOptimalThresholdButton.setText("Search Optimal Threshold");
+                resetFragment();
+                searchOptimalThresholdButton.setEnabled(true);
                 String rssi = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                 rssiTolerance = rssi;
                 rssiTextView.setText("Threshold: " + rssi);
-                searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        startSearchOptimalThreshold();
-                    }
-                });
                 break;
             }
             case SEARCH_OPTIMAL_PEAK_FAIL: {
-                progressBarSearchOptimalThreshold.setVisibility(View.GONE);
-                searchOptimalThresholdButton.setText("Search Optimal Threshold");
-                searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        startSearchOptimalThreshold();
-                    }
-                });
+                resetFragment();
+                searchOptimalThresholdButton.setEnabled(true);
                 break;
             }
         }

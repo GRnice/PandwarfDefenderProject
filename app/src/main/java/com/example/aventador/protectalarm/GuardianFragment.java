@@ -98,9 +98,13 @@ public class GuardianFragment extends Fragment {
     }
 
     private void stopProtection() {
+        resetFragment();
+        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
+    }
+
+    private void resetFragment() {
         startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
         startStopProtectionButton.setText("Start protection");
-        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -132,14 +136,7 @@ public class GuardianFragment extends Fragment {
             }
             case DISCONNECTED: {
                 startStopProtectionButton.setEnabled(false);
-                startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
-                startStopProtectionButton.setText("Start protection");
-                startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        startProtection();
-                    }
-                });
+                resetFragment();
                 break;
             }
             case FREQUENCY_SELECTED: {
@@ -153,9 +150,7 @@ public class GuardianFragment extends Fragment {
                 break;
             }
             case PROTECTION_FAIL: {
-                startStopProtectionButton.setEnabled(true);
-                startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
-                startStopProtectionButton.setText("Start protection");
+                resetFragment();
                 break;
             }
         }

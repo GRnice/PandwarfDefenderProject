@@ -75,13 +75,7 @@ public class HomeFragment extends Fragment {
         });
 
         connectionButton = (Button) bodyView.findViewById(R.id.connection_button);
-        connectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startScan();
-            }
-        });
-        connectionButton.setVisibility(View.INVISIBLE);
+        resetFragment();
 
         return bodyView;
     }
@@ -119,17 +113,25 @@ public class HomeFragment extends Fragment {
     }
 
     private void stopScan() {
-        scanProgressbar.setVisibility(View.INVISIBLE);
-        connectionButton.setText("connection");
+        resetFragment();
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_CONNECT, ""));
+    }
+
+    public void resetFragment() {
+        connectionButton.setVisibility(View.INVISIBLE);
+        connectionButton.setText("connection");
         connectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScan();
             }
         });
+        if (isValidAddressMac(addressMacEditText.getText().toString())) {
+            connectionButton.setVisibility(View.VISIBLE);
+        } else {
+            connectionButton.setVisibility(View.INVISIBLE);
+        }
     }
-
 
 
     /**
@@ -164,13 +166,7 @@ public class HomeFragment extends Fragment {
             }
             case DISCONNECTED: {
                 Logger.d(TAG, "DISCONNECTED");
-                connectionButton.setText("connection");
-                connectionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        startScan();
-                    }
-                });
+                resetFragment();
                 break;
             }
         }
