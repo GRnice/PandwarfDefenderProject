@@ -113,6 +113,14 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         Jammer.getInstance().init(this);
         EventBus.getDefault().register(this);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                            android.Manifest.permission.BLUETOOTH},
+                    REQUEST_CODE_ASK_PERMISSIONS);
+            return;
+        }
+
     }
 
     private void newStateDetected(int state) {
@@ -131,8 +139,12 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
 
             case BluetoothAdapter.STATE_TURNING_OFF:
-                killAllProcess();
-                EventBus.getDefault().postSticky(new StateEvent(DISCONNECTED, ""));
+                killAllProcess(new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+                        EventBus.getDefault().postSticky(new StateEvent(DISCONNECTED, ""));
+                    }
+                });
                 //Indicates the local Bluetooth adapter is turning off. Local clients should immediately attempt graceful disconnection of any remote links.
                 break;
         }
@@ -141,7 +153,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     /**
      * Kill all process, scan, threshold discovery, protection, jamming
      */
-    public void killAllProcess() {
+    public void killAllProcess(final GollumCallbackGetBoolean killDone) {
         Scanner.getInstance().stopConnect(this);
         WatchMan.getInstance().stopDiscovery(this, new GollumCallbackGetBoolean() {
             @Override
@@ -152,7 +164,8 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
                             @Override
                             public void done(boolean b) {
-
+                                killDone.done(true);
+                                GollumDongle.getInstance(Main2Activity.this).closeDevice();
                             }
                         });
                     }
@@ -177,7 +190,17 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     }
 
     private void startGuardian(final String frequency, final String dbTolerance) {
-        boolean startSuccess = WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+        WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean startSuccess) {
+                if (!startSuccess) {
+                    Toast error = Toast.makeText(Main2Activity.this, "Fail to start protection", Toast.LENGTH_SHORT);
+                    error.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                    error.show();
+                    EventBus.getDefault().postSticky(new StateEvent(PROTECTION_FAIL, ""));
+                }
+            }
+        }, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 HashMap<String, String> parameters = new HashMap<>();
@@ -187,12 +210,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             }
         });
 
-        if (!startSuccess) {
-            Toast error = Toast.makeText(this, "One process at a time", Toast.LENGTH_SHORT);
-            error.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-            error.show();
-            EventBus.getDefault().postSticky(new StateEvent(PROTECTION_FAIL, ""));
-        }
+
     }
 
     /**
@@ -206,13 +224,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             case CONNECT: {
                 Scanner scanner = Scanner.getInstance();
                 final String bleAddressTarget = actionEvent.getParameters().getString(Action.CONNECT.toString());
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                    android.Manifest.permission.BLUETOOTH},
-                            REQUEST_CODE_ASK_PERMISSIONS);
-                    return;
-                }
 
                 scanner.connect(this, bleAddressTarget, new GollumCallbackGetBoolean() {
                     @Override
@@ -227,14 +238,29 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
             }
             case DISCONNECT: {
-                killAllProcess();
-                GollumDongle.getInstance(this).closeDevice();
-                EventBus.getDefault().postSticky(new StateEvent(State.DISCONNECTED, ""));
+                killAllProcess(new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+                        GollumDongle.getInstance(Main2Activity.this).closeDevice();
+                        EventBus.getDefault().postSticky(new StateEvent(State.DISCONNECTED, ""));
+                    }
+                });
                 break;
             }
             case START_SEARCH_THRESHOLD: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                boolean startSuccess = WatchMan.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetInteger() {
+                WatchMan.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean startSuccess) {
+                        if (!startSuccess) {
+                            Toast error = Toast.makeText(Main2Activity.this, "Fail to search threshold", Toast.LENGTH_SHORT);
+                            error.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                            error.show();
+
+                            EventBus.getDefault().postSticky(new StateEvent(SEARCH_OPTIMAL_PEAK_FAIL, ""));
+                        }
+                    }
+                }, new GollumCallbackGetInteger() {
                     @Override
                     public void done(final int rssi) {
                         Log.d(TAG, "Threshold found");
@@ -249,13 +275,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                     }
                 });
 
-                if (!startSuccess) {
-                    Toast error = Toast.makeText(this, "One process at a time", Toast.LENGTH_SHORT);
-                    error.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-                    error.show();
 
-                    EventBus.getDefault().postSticky(new StateEvent(SEARCH_OPTIMAL_PEAK_FAIL, ""));
-                }
 
                 break;
             }

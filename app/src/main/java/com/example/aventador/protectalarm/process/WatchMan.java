@@ -77,46 +77,54 @@ public class WatchMan {
      * @param activity
      * @param frequency
      * @param dbTolerance
+     * @param cbStartGuardianDone
      * @param cbAttackDetected
      * @return
      */
-    public boolean startGuardian(final Activity activity, final int frequency, final int dbTolerance, final GollumCallbackGetBoolean cbAttackDetected) {
+    public void startGuardian(final Activity activity, final int frequency, final int dbTolerance, final GollumCallbackGetBoolean cbStartGuardianDone, final GollumCallbackGetBoolean cbAttackDetected) {
         Logger.d(TAG, "discoverIsRunning.get():" + discoverIsRunning.get() + " guardianIsRunning ?: " + guardianIsRunning.get() + " specan run:" + specanIsRunning);
         if (!isAvailableForNewStart() || !guardianIsRunning.compareAndSet(false, true)) {
-            return false;
+            cbStartGuardianDone.done(false);
         }
         Logger.d(TAG, "Start Guardian");
         startSpecan(activity, frequency, new GollumCallbackGetBoolean() {
             @Override
-            public void done(boolean b) {
-                guardianThread = new GuardianThread(activity, dbTolerance, cbAttackDetected);
-                guardianThread.start();
+            public void done(boolean startSuccess) {
+                if (startSuccess) {
+                    guardianThread = new GuardianThread(activity, dbTolerance, cbAttackDetected);
+                    guardianThread.start();
+                }
+                cbStartGuardianDone.done(startSuccess);
             }
         });
-        return true;
     }
 
     /**
      *
      * @param activity
      * @param frequency
+     * @param cbStartDiscoveryDone
      * @param cbDiscoveryDone
      * @return
      */
-    public boolean startDiscovery(final Activity activity, int frequency, final GollumCallbackGetInteger cbDiscoveryDone) {
+    public void startDiscovery(final Activity activity, int frequency, final GollumCallbackGetBoolean cbStartDiscoveryDone, final GollumCallbackGetInteger cbDiscoveryDone) {
         Logger.d(TAG, "guardianIsRunning.get():" + guardianIsRunning.get() + " discoverIsRunning ?: " + discoverIsRunning.get() + " specan run:" + specanIsRunning);
         if (guardianIsRunning.get() || !discoverIsRunning.compareAndSet(false, true) || specanIsRunning) {
-            return false;
+            cbStartDiscoveryDone.done(false);
         }
         Logger.d(TAG, "Start discovery");
         startSpecan(activity, frequency, new GollumCallbackGetBoolean() {
             @Override
-            public void done(boolean b) {
-                discoverThread = new DiscoverThread(activity, cbDiscoveryDone);
-                discoverThread.start();
+            public void done(boolean success) {
+                if (success) {
+                    discoverThread = new DiscoverThread(activity, cbDiscoveryDone);
+                    discoverThread.start();
+                }
+                cbStartDiscoveryDone.done(success);
+
+
             }
         });
-        return true;
     }
 
     /**

@@ -54,9 +54,11 @@ public class Scanner {
         scanRunning.set(true);
 
         final String bleAddressTargeted = bleAddress.toLowerCase();
+        Logger.d(TAG, "start search: ");
         GollumDongle.getInstance(activity).searchDevice(new ScannerListener() {
             @Override
             public void onSignalNewDevice(ExtendedBluetoothDevice extendedBluetoothDevice) {
+                Logger.d(TAG, "onSignalNewDevice: " + extendedBluetoothDevice.getAddress());
                 String bleAddressFound = extendedBluetoothDevice.getAddress().toLowerCase();
                 if (bleAddressFound.equals(bleAddressTargeted)) { // if ble found match with the ble address targeted
                     // open this device.
