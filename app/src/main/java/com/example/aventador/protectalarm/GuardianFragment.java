@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +15,12 @@ import android.widget.TextView;
 import com.beardedhen.androidbootstrap.BootstrapBadge;
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.beardedhen.androidbootstrap.api.attributes.BootstrapBrand;
+import com.example.aventador.protectalarm.customViews.CustomPagerAdapter;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.tools.Logger;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -31,12 +34,14 @@ import static android.view.View.GONE;
 
 public class GuardianFragment extends Fragment {
 
+    private final static String TAG = "GuardianFragment";
     private LinearLayout layoutStartStopProtection;
     private BootstrapButton startStopProtectionButton;
     private TextView frequencyTextView;
     private EditText frequencyEditText;
     private TextView dbToleranceTextView;
     private EditText dbToleranceEditText;
+    private ViewPager viewPager;
 
 
     public GuardianFragment() {
@@ -78,6 +83,9 @@ public class GuardianFragment extends Fragment {
             }
         });
         startStopProtectionButton.setEnabled(false);
+        viewPager = (ViewPager) bodyView.findViewById(R.id.guardian_view_pager);
+        CustomPagerAdapter customPagerAdapter = new CustomPagerAdapter(this.getContext());
+        viewPager.setAdapter(customPagerAdapter);
         return bodyView;
     }
 

@@ -83,4 +83,12 @@
             app:roundedCorners="true"
             android:id="@+id/start_stop_protection_button" />
     </LinearLayout>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/guardian_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        android:visibility="visible" />
+
 </LinearLayout>
