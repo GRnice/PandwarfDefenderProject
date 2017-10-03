@@ -16,10 +16,10 @@ import com.example.aventador.protectalarm.R;
 
 public class SettingsSubView extends GuardianSubView {
     private TextView toleranceTextView;
-    private int tolerance;
+    private int tolerance = 50;
 
     private TextView marginErrorTextView;
-    private int marginError;
+    private int marginError = 10;
 
     private ViewPager viewPager;
 
@@ -42,13 +42,18 @@ public class SettingsSubView extends GuardianSubView {
         ImageView switchToHistoryImageView = (ImageView) layout.findViewById(R.id.switch_page_image_view);
         switchToHistoryImageView.setOnClickListener(this);
 
-        SeekBar seekBarTolerance = (SeekBar) layout.findViewById(R.id.tolerance_seekbar);
-        seekBarTolerance.setOnSeekBarChangeListener(this);
-        SeekBar seekBarMarginError = (SeekBar) layout.findViewById(R.id.margin_error_seekbar);
-        seekBarMarginError.setOnSeekBarChangeListener(this);
-
         toleranceTextView = (TextView) layout.findViewById(R.id.tolerance_textview);
         marginErrorTextView = (TextView) layout.findViewById(R.id.margin_error_textview);
+
+        SeekBar seekBarTolerance = (SeekBar) layout.findViewById(R.id.tolerance_seekbar);
+        seekBarTolerance.setOnSeekBarChangeListener(this);
+        seekBarTolerance.setProgress(tolerance);
+
+        SeekBar seekBarMarginError = (SeekBar) layout.findViewById(R.id.margin_error_seekbar);
+        seekBarMarginError.setOnSeekBarChangeListener(this);
+        seekBarMarginError.setProgress(marginError);
+
+
 
         return layout;
     }

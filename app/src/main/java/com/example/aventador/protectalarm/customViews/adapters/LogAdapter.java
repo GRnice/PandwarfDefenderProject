@@ -63,7 +63,7 @@ public class LogAdapter extends ArrayAdapter<HistoryLog> {
         }
         TextView textView = (TextView) convertView.findViewById(R.id.message_log_textview);
         textView.setText(historyLog.getMessage());
-        
+
         return convertView;
     }
 }
