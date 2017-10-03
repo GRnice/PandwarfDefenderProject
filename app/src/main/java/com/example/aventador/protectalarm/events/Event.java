@@ -73,4 +73,13 @@ public abstract class Event<T> {
     public final Bundle getParameters() {
         return parameters;
     }
+
+    public final boolean hasParameter(Parameter parameter) {
+        return parameters.containsKey(parameter.toString());
+    }
+
+    public final String getParameter(Parameter parameter) {
+        return parameters.getString(parameter.toString());
+    }
+
 }

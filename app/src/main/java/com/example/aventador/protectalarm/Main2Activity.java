@@ -292,10 +292,10 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
             }
             case START_PROTECTION: {
-                final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                String dbTolerance =  actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
-                int peakTolerance = Integer.valueOf(actionEvent.getParameters().getString(Parameter.PEAK_TOLERANCE.toString()));
-                int marginError = Integer.valueOf(actionEvent.getParameters().getString(Parameter.MARGIN_ERROR.toString()));
+                final String frequency = actionEvent.getParameter(Parameter.FREQUENCY);
+                String dbTolerance =  actionEvent.getParameter(Parameter.RSSI_VALUE);
+                int peakTolerance = Integer.valueOf(actionEvent.getParameter(Parameter.PEAK_TOLERANCE));
+                int marginError = Integer.valueOf(actionEvent.getParameter(Parameter.MARGIN_ERROR));
 
                 startGuardian(frequency, dbTolerance, peakTolerance, marginError);
                 Toast toast = Toast.makeText(this, "protection started\n frequency: " + frequency +
@@ -336,10 +336,10 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                     @Override
                     public void done(boolean b) {
                         Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
-                        final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                        final String dbTolerance = actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
-                        final int peakTolerance = Integer.valueOf(actionEvent.getParameters().getString(Parameter.PEAK_TOLERANCE.toString()));
-                        final int marginError = Integer.valueOf(actionEvent.getParameters().getString(Parameter.MARGIN_ERROR.toString()));
+                        final String frequency = actionEvent.getParameter(Parameter.FREQUENCY);
+                        final String dbTolerance = actionEvent.getParameter(Parameter.RSSI_VALUE);
+                        final int peakTolerance = Integer.valueOf(actionEvent.getParameter(Parameter.PEAK_TOLERANCE));
+                        final int marginError = Integer.valueOf(actionEvent.getParameter(Parameter.MARGIN_ERROR));
                         try {
                             Thread.sleep(1000); // latency ... shit.
                         } catch (InterruptedException e) {
