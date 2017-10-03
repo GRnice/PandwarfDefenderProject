@@ -8,5 +8,6 @@ public enum Parameter {
     FREQUENCY,
     RSSI_VALUE,
     PEAK_TOLERANCE,
-    MARGIN_ERROR;
+    MARGIN_ERROR,
+    DATE;
 }

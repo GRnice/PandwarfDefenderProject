@@ -39,9 +39,19 @@ public class CustomPagerAdapter extends PagerAdapter {
         return null;
     }
 
-    private void init(ViewPager viewPager) {
+    public HistorySubView getHistorySubView() {
+        for (int i = 0 ; i < allSubGardians.size() ; i++) {
+            if (allSubGardians.get(i)instanceof HistorySubView) {
+                return (HistorySubView) allSubGardians.get(i);
+            }
+        }
+
+        return null;
+    }
+
+    private void init( ViewPager viewPager) {
         this.allSubGardians.add(new SettingsSubView("Settings", R.layout.guardian_settings, viewPager));
-        this.allSubGardians.add(new HistorySubView("History", R.layout.guardian_history));
+        this.allSubGardians.add(new HistorySubView(context, "History", R.layout.guardian_history));
     }
 
     @Override

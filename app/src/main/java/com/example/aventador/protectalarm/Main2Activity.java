@@ -29,6 +29,7 @@ import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteg
 import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
+import com.example.aventador.protectalarm.events.Event;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
@@ -41,7 +42,9 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import static com.example.aventador.protectalarm.events.State.ATTACK_DETECTED;
@@ -204,11 +207,16 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         }, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
+                HashMap<String, String> parametersAttackDetected = new HashMap<>();
+                parametersAttackDetected.put(Parameter.DATE.toString(), getCurrentTime());
+                EventBus.getDefault().postSticky(new StateEvent(ATTACK_DETECTED, parametersAttackDetected));
+
                 HashMap<String, String> parameters = new HashMap<>();
                 parameters.put(Parameter.FREQUENCY.toString(), frequency);
                 parameters.put(Parameter.RSSI_VALUE.toString(), dbTolerance);
                 parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(peakTolerance));
                 parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(marginError));
+
                 EventBus.getDefault().postSticky(new ActionEvent(Action.START_JAMMING, parameters));
             }
         });
@@ -419,6 +427,13 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     @Override
     public void onPageScrollStateChanged(int state) {
 
+    }
+
+    public String getCurrentTime() {
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
+        String formattedDate = sdf.format(date);
+        return formattedDate; // 03/10/2017 14:48:16
     }
 
     /**
