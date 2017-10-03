@@ -1,6 +1,7 @@
 package com.example.aventador.protectalarm.customViews;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
@@ -26,6 +27,16 @@ public class CustomPagerAdapter extends PagerAdapter {
         this.context = context;
         this.allSubGardians = new ArrayList<>();
         init(viewPager);
+    }
+
+    public SettingsSubView getSettingsSubView() {
+        for (int i = 0 ; i < allSubGardians.size() ; i++) {
+            if (allSubGardians.get(i)instanceof SettingsSubView) {
+                return (SettingsSubView) allSubGardians.get(i);
+            }
+        }
+
+        return null;
     }
 
     private void init(ViewPager viewPager) {

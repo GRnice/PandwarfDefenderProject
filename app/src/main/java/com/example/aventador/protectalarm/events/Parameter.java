@@ -6,5 +6,7 @@ package com.example.aventador.protectalarm.events;
 
 public enum Parameter {
     FREQUENCY,
-    RSSI_VALUE;
+    RSSI_VALUE,
+    PEAK_TOLERANCE,
+    MARGIN_ERROR;
 }

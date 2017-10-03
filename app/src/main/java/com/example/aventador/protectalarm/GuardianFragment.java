@@ -16,6 +16,7 @@ import com.beardedhen.androidbootstrap.BootstrapBadge;
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.beardedhen.androidbootstrap.api.attributes.BootstrapBrand;
 import com.example.aventador.protectalarm.customViews.CustomPagerAdapter;
+import com.example.aventador.protectalarm.customViews.SettingsSubView;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
@@ -97,6 +98,8 @@ public class GuardianFragment extends Fragment {
 
         parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
         parameters.put(Parameter.RSSI_VALUE.toString(), dbToleranceEditText.getText().toString());
+        parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(getPeakTolerance()));
+        parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(getMargingError()));
         EventBus.getDefault().postSticky(new ActionEvent(Action.START_PROTECTION, parameters));
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,6 +107,18 @@ public class GuardianFragment extends Fragment {
                 stopProtection();
             }
         });
+    }
+
+    private int getPeakTolerance() {
+        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
+        SettingsSubView settingsSubView = customPagerAdapter.getSettingsSubView();
+        return settingsSubView.getPeakTolerance();
+    }
+
+    private int getMargingError() {
+        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
+        SettingsSubView settingsSubView = customPagerAdapter.getSettingsSubView();
+        return settingsSubView.getMarginError();
     }
 
     private void stopProtection() {

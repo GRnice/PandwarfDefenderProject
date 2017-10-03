@@ -189,8 +189,9 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         return true;
     }
 
-    private void startGuardian(final String frequency, final String dbTolerance) {
-        WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency), Integer.valueOf(dbTolerance), new GollumCallbackGetBoolean() {
+    private void startGuardian(final String frequency, final String dbTolerance, final int peakTolerance, final int marginError) {
+        WatchMan.getInstance().startGuardian(this, Integer.valueOf(frequency),
+                Integer.valueOf(dbTolerance), peakTolerance, marginError, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean startSuccess) {
                 if (!startSuccess) {
@@ -206,6 +207,8 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 HashMap<String, String> parameters = new HashMap<>();
                 parameters.put(Parameter.FREQUENCY.toString(), frequency);
                 parameters.put(Parameter.RSSI_VALUE.toString(), dbTolerance);
+                parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(peakTolerance));
+                parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(marginError));
                 EventBus.getDefault().postSticky(new ActionEvent(Action.START_JAMMING, parameters));
             }
         });
@@ -291,8 +294,15 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             case START_PROTECTION: {
                 final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 String dbTolerance =  actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
-                startGuardian(frequency, dbTolerance);
-                Toast toast = Toast.makeText(this, "protection started\n frequency: " + frequency + ", db tolerance: " + dbTolerance, Toast.LENGTH_SHORT);
+                int peakTolerance = Integer.valueOf(actionEvent.getParameters().getString(Parameter.PEAK_TOLERANCE.toString()));
+                int marginError = Integer.valueOf(actionEvent.getParameters().getString(Parameter.MARGIN_ERROR.toString()));
+
+                startGuardian(frequency, dbTolerance, peakTolerance, marginError);
+                Toast toast = Toast.makeText(this, "protection started\n frequency: " + frequency +
+                        "\n db tolerance: " + dbTolerance +
+                        "\n peak tolerance: " + peakTolerance +
+                        "\n margin error: " + marginError
+                        , Toast.LENGTH_SHORT);
                 toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                 toast.show();
                 break;
@@ -328,6 +338,8 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
                         final String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                         final String dbTolerance = actionEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
+                        final int peakTolerance = Integer.valueOf(actionEvent.getParameters().getString(Parameter.PEAK_TOLERANCE.toString()));
+                        final int marginError = Integer.valueOf(actionEvent.getParameters().getString(Parameter.MARGIN_ERROR.toString()));
                         try {
                             Thread.sleep(1000); // latency ... shit.
                         } catch (InterruptedException e) {
@@ -342,7 +354,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                                     e.printStackTrace();
                                 }
                                 Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
-                                startGuardian(frequency, dbTolerance);
+                                startGuardian(frequency, dbTolerance, peakTolerance, marginError);
                             }
                         });
                     }

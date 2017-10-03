@@ -81,7 +81,9 @@ public class WatchMan {
      * @param cbAttackDetected
      * @return
      */
-    public void startGuardian(final Activity activity, final int frequency, final int dbTolerance, final GollumCallbackGetBoolean cbStartGuardianDone, final GollumCallbackGetBoolean cbAttackDetected) {
+    public void startGuardian(final Activity activity, final int frequency, final int dbTolerance,
+                              final int peakTolerance, final int marginError,
+                              final GollumCallbackGetBoolean cbStartGuardianDone, final GollumCallbackGetBoolean cbAttackDetected) {
         Logger.d(TAG, "discoverIsRunning.get():" + discoverIsRunning.get() + " guardianIsRunning ?: " + guardianIsRunning.get() + " specan run:" + specanIsRunning);
         if (!isAvailableForNewStart() || !guardianIsRunning.compareAndSet(false, true)) {
             cbStartGuardianDone.done(false);
@@ -91,7 +93,7 @@ public class WatchMan {
             @Override
             public void done(boolean startSuccess) {
                 if (startSuccess) {
-                    guardianThread = new GuardianThread(activity, dbTolerance, cbAttackDetected);
+                    guardianThread = new GuardianThread(activity, dbTolerance, peakTolerance, marginError, cbAttackDetected);
                     guardianThread.start();
                 }
                 cbStartGuardianDone.done(startSuccess);
@@ -314,13 +316,19 @@ public class WatchMan {
 
         private int dbTolerance;
         private GollumCallbackGetBoolean cbAttackDetected;
+        private double marginError;
+        private int peakTolerance;
         private Activity activity;
         private AtomicBoolean run;
 
-        public GuardianThread(Activity activity, int dbTolerance, final GollumCallbackGetBoolean cbAttackDetected) {
+        public GuardianThread(Activity activity, int dbTolerance,
+                              final int peakTolerance, final int marginError,
+                              final GollumCallbackGetBoolean cbAttackDetected) {
             this.activity = activity;
             this.dbTolerance = dbTolerance;
             this.cbAttackDetected = cbAttackDetected;
+            this.peakTolerance = (int) ((peakTolerance / 100.0) * GUARDIAN_NB_SEQUENCES);
+            this.marginError = marginError / 100.0;
         }
         @Override
         public void run() {
@@ -356,14 +364,14 @@ public class WatchMan {
                     Log.d(TAG, "means is: " + means);
                     nbElements = 0;
                     sum = 0;
-                    if (means > (dbTolerance + Math.abs(MARGIN_ERROR * dbTolerance))) {
+                    if (means > (dbTolerance + Math.abs(marginError * dbTolerance))) {
                         peakDetected++;
                         Logger.d(TAG, "peak detected, peakDetected: " + peakDetected);
                     }
 
                 }
 
-                if (peakDetected > WatchMan.PEAK_TOLERANCE) {
+                if (peakDetected > peakTolerance) {
                     Logger.d(TAG, "attack detected");
                     this.cbAttackDetected.done(true);
                 }

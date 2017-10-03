@@ -28,6 +28,14 @@ public class SettingsSubView extends GuardianSubView {
         this.viewPager = viewPager;
     }
 
+    public int getPeakTolerance() {
+        return tolerance;
+    }
+
+    public int getMarginError() {
+        return marginError;
+    }
+
     @Override
     public View instantiate(LayoutInflater inflater, ViewGroup viewGroup) {
         layout = inflater.inflate(getLayoutResId(), viewGroup, false);
