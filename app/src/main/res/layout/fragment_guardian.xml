@@ -28,7 +28,7 @@
                 android:id="@+id/frequency_guardian_textview"
                 android:layout_weight="5"
                 android:gravity="center_vertical"
-                android:textSize="24sp" />
+                android:textSize="18sp" />
 
             <EditText
                 android:layout_width="0dp"
@@ -52,9 +52,9 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:id="@+id/db_tolerance_guardian_textview"
-                android:layout_weight="6"
+                android:layout_weight="5"
                 android:gravity="center_vertical"
-                android:textSize="24sp" />
+                android:textSize="18sp" />
 
             <EditText
                 android:layout_width="0dp"
@@ -62,9 +62,32 @@
                 android:inputType="numberSigned"
                 android:ems="10"
                 android:id="@+id/dbtolerance_guardian_edittext"
-                android:layout_weight="4" />
+                android:layout_weight="5" />
         </LinearLayout>
     </LinearLayout>
+
+    <SurfaceView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/graphic_surfaceView"
+        android:layout_weight="0" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.3"
+        android:background="@color/bootstrap_alert_cross_default"
+        android:id="@+id/linearlayout44">
+
+    </LinearLayout>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/guardian_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6.7"
+        android:visibility="visible" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -72,6 +95,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:id="@+id/start_protection_layout">
+
         <com.beardedhen.androidbootstrap.BootstrapButton
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -83,24 +107,5 @@
             app:roundedCorners="true"
             android:id="@+id/start_stop_protection_button" />
     </LinearLayout>
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.5" />
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.05"
-        android:background="@color/bootstrap_brand_secondary_text"></LinearLayout>
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/guardian_view_pager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="6.45"
-        android:visibility="visible" />
 
 </LinearLayout>
