@@ -1,28 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:weightSum="10"
+    android:background="@color/bootstrap_gray_lighter">
 
-    <ProgressBar
-        style="?android:attr/progressBarStyleHorizontal"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/progressBar2" />
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:elevation="1dp"
+        android:weightSum="10">
 
-    <SeekBar
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/seekBar" />
+        <TextView
+            android:text="Settings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/textView3"
+            android:gravity="center_vertical"
+            android:textSize="24sp"
+            android:layout_weight="8"
+            android:textColor="@color/bootstrap_gray_dark" />
 
-    <Button
-        android:text="Button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/button2" />
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_chevron_right"
+            android:id="@+id/switch_page_image_view"
+            android:layout_weight="2" />
 
-    <Button
-        android:text="Button"
+    </LinearLayout>
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/button3" />
+        android:layout_height="0dp"
+        android:layout_weight="8">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:weightSum="10"
+                android:paddingTop="10px"
+                android:layout_marginTop="20px">
+
+                <TextView
+                    android:text="Tolerance :"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tolerance_textview"
+                    android:layout_weight="3"
+                    android:textSize="18sp"
+                    android:gravity="center_vertical|fill_vertical"
+                    android:textColor="@color/bootstrap_gray_dark" />
+
+                <SeekBar
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tolerance_seekbar"
+                    android:layout_weight="7" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:weightSum="10"
+                android:layout_marginTop="40px">
+
+                <TextView
+                    android:text="Margin error :"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/margin_error_textview"
+                    android:layout_weight="3"
+                    android:textSize="18sp"
+                    android:textColor="@color/bootstrap_gray_dark" />
+
+                <SeekBar
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/margin_error_seekbar"
+                    android:layout_weight="7"
+                    android:max="30" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
 </LinearLayout>

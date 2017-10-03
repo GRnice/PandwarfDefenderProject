@@ -1,11 +1,21 @@
 package com.example.aventador.protectalarm.customViews;
 
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
+
+import com.example.aventador.protectalarm.R;
+
 /**
  * Created by Aventador on 02/10/2017.
  */
-public class GuardianSubView {
+public abstract class GuardianSubView implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
     private int layoutResId;
     private String title;
+    protected View layout;
 
     public int getLayoutResId() {
         return layoutResId;
@@ -19,4 +29,8 @@ public class GuardianSubView {
         this.layoutResId = layoutResId;
         this.title = title;
     }
+
+    public abstract View instantiate(LayoutInflater inflater, ViewGroup viewGroup);
+
+
 }

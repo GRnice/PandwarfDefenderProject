@@ -84,8 +84,9 @@ public class GuardianFragment extends Fragment {
         });
         startStopProtectionButton.setEnabled(false);
         viewPager = (ViewPager) bodyView.findViewById(R.id.guardian_view_pager);
-        CustomPagerAdapter customPagerAdapter = new CustomPagerAdapter(this.getContext());
+        CustomPagerAdapter customPagerAdapter = new CustomPagerAdapter(this.getContext(), viewPager);
         viewPager.setAdapter(customPagerAdapter);
+        viewPager.setOffscreenPageLimit(customPagerAdapter.getCount());
         return bodyView;
     }
 

@@ -2,6 +2,7 @@ package com.example.aventador.protectalarm.customViews;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,23 +22,22 @@ public class CustomPagerAdapter extends PagerAdapter {
     private Context context;
     private ArrayList<GuardianSubView> allSubGardians;
 
-    public CustomPagerAdapter(Context context) {
+    public CustomPagerAdapter(Context context, ViewPager viewPager) {
         this.context = context;
         this.allSubGardians = new ArrayList<>();
-        init();
+        init(viewPager);
     }
 
-    private void init() {
-        this.allSubGardians.add(new GuardianSubView("Settings", R.layout.guardian_settings));
-        this.allSubGardians.add(new GuardianSubView("History", R.layout.guardian_history));
+    private void init(ViewPager viewPager) {
+        this.allSubGardians.add(new SettingsSubView("Settings", R.layout.guardian_settings, viewPager));
+        this.allSubGardians.add(new HistorySubView("History", R.layout.guardian_history));
     }
 
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
         Logger.d(TAG, "instantiateItem");
-        GuardianSubView subView = allSubGardians.get(position);
         LayoutInflater inflater = LayoutInflater.from(context);
-        View layout = inflater.inflate(subView.getLayoutResId(), collection, false);
+        View layout = allSubGardians.get(position).instantiate(inflater, collection);
         collection.addView(layout);
         return layout;
     }
