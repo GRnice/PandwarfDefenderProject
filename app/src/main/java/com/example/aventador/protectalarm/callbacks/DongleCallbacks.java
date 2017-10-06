@@ -1,6 +1,9 @@
 package com.example.aventador.protectalarm.callbacks;
 
 import com.comthings.gollum.api.gollumandroidlib.ble.GollumBleManagerCallbacks;
+import com.example.aventador.protectalarm.events.State;
+import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.tools.Logger;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -9,6 +12,7 @@ import org.greenrobot.eventbus.EventBus;
  */
 
 public class DongleCallbacks implements GollumBleManagerCallbacks {
+    private final static String TAG = "DongleCallbacks";
     @Override
     public void onDeviceNameValueReceived(String s) {
 
@@ -115,7 +119,6 @@ public class DongleCallbacks implements GollumBleManagerCallbacks {
 
     @Override
     public void onDeviceDisconnecting() {
-
     }
 
     @Override
@@ -135,7 +138,8 @@ public class DongleCallbacks implements GollumBleManagerCallbacks {
 
     @Override
     public void onDeviceReady() {
-
+        Logger.d(TAG, "onDeviceReady");
+        EventBus.getDefault().postSticky(new StateEvent(State.CONNECTED, ""));
     }
 
     @Override

@@ -19,6 +19,19 @@ public class Tools {
         }
     }
 
+    public static final boolean isValidDb(String db) {
+        try {
+            int freq = Integer.parseInt(db);
+            Logger.d(TAG, "" + freq);
+            if (freq >= -120 && freq <= 0) {
+                return true;
+            }
+            return false;
+        }catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     public static final boolean isValidAddressMac(String addressMac) {
         if (addressMac.length() != 17) {
             Logger.e(TAG, "size addressMac is wrong");

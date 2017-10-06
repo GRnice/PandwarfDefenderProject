@@ -53,8 +53,6 @@ public class SettingsSubView extends GuardianSubView {
         seekBarMarginError.setOnSeekBarChangeListener(this);
         seekBarMarginError.setProgress(marginError);
 
-
-
         return layout;
     }
 

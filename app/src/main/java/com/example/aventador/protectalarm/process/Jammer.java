@@ -90,13 +90,14 @@ public class Jammer {
     /**
      *
      * @param frequency
+     * @param cbStartJamming
      * @param cbJammingDone
      * @return
      */
-    public boolean startJamming(int frequency, GollumCallbackGetBoolean cbJammingDone) {
+    public void startJamming(int frequency, final GollumCallbackGetBoolean cbStartJamming, GollumCallbackGetBoolean cbJammingDone) {
         Logger.d(TAG, "startJamming()");
-        if (!jammingIsRunning.compareAndSet(false, true)) {
-            return false;
+        if (!Pandwarf.getInstance().isAvailableForNewStart(activity) || !jammingIsRunning.compareAndSet(false, true)) {
+            cbStartJamming.done(false);
         }
         this.cbJammingDone = cbJammingDone;
         Logger.d(TAG, "jamming can be started");
@@ -104,10 +105,10 @@ public class Jammer {
             @Override
             public void done(int i) {
                 Logger.d(TAG, "jamming started");
+                cbStartJamming.done(true);
                 prepareJob(); // prepare the job dedicated to stop the jamming after a certain delay. see field: DELAY
             }
         });
-        return true;
     }
 
     /**

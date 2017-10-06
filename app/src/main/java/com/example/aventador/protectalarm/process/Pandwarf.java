@@ -11,7 +11,6 @@ import com.example.aventador.protectalarm.tools.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -19,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 /**
- * WatchMan is responsible for :
+ * Pandwarf is responsible for :
  *                              calculating the tolerance threshold making it possible to distinguish a brute force attack.
  *                              monitor if an attack is in progress.
  *
@@ -28,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * It's impossible to start specan if the pandwarf has not stop correctly jamming or previous specan.
  * It's impossible to start jamming if the pandwarf has not stop correctly jamming or previous specan.
  */
-public class WatchMan {
+public class Pandwarf {
 
     private static int DELAY_PACKETS_RSSI_MS = 100;
     private static int FREQUENCY_BY_CHANNELS = 25000;
@@ -50,26 +49,28 @@ public class WatchMan {
      */
     private static int DISCOVERY_NB_SEQUENCES = 8; // 8 sequences of scan will be executed
 
-    private static WatchMan instance;
+    private static Pandwarf instance;
+    private boolean isConnected;
     private AtomicBoolean guardianIsRunning;
     private AtomicBoolean discoverIsRunning;
     private boolean specanIsRunning;
     private GuardianThread guardianThread;
     private DiscoverThread discoverThread;
-    private static final String TAG = "WatchMan";
+    private static final String TAG = "Pandwarf";
 
-    public static WatchMan getInstance() {
+    public static Pandwarf getInstance() {
         if (instance == null) {
-            instance = new WatchMan();
+            instance = new Pandwarf();
         }
 
         return instance;
     }
 
-    private WatchMan() {
+    private Pandwarf() {
         guardianIsRunning = new AtomicBoolean(false);
         discoverIsRunning = new AtomicBoolean(false);
         specanIsRunning = false;
+        isConnected = false;
     }
 
     /**
@@ -84,14 +85,19 @@ public class WatchMan {
     public void startGuardian(final Activity activity, final int frequency, final int dbTolerance,
                               final int peakTolerance, final int marginError,
                               final GollumCallbackGetBoolean cbStartGuardianDone, final GollumCallbackGetBoolean cbAttackDetected) {
-        Logger.d(TAG, "discoverIsRunning.get():" + discoverIsRunning.get() + " guardianIsRunning ?: " + guardianIsRunning.get() + " specan run:" + specanIsRunning);
-        if (!isAvailableForNewStart() || !guardianIsRunning.compareAndSet(false, true)) {
+        Logger.d(TAG, "startGuardian: discoverIsRunning.get():" +
+                discoverIsRunning.get() + " guardianIsRunning ?: " +
+                guardianIsRunning.get() + " specan run:" + specanIsRunning);
+
+        if (!isAvailableForNewStart(activity) || !guardianIsRunning.compareAndSet(false, true)) {
             cbStartGuardianDone.done(false);
+            return;
         }
         Logger.d(TAG, "Start Guardian");
         startSpecan(activity, frequency, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean startSuccess) {
+                Logger.d(TAG, "startGuardian: success ? " + startSuccess);
                 if (startSuccess) {
                     guardianThread = new GuardianThread(activity, dbTolerance, peakTolerance, marginError, cbAttackDetected);
                     guardianThread.start();
@@ -110,9 +116,14 @@ public class WatchMan {
      * @return
      */
     public void startDiscovery(final Activity activity, int frequency, final GollumCallbackGetBoolean cbStartDiscoveryDone, final GollumCallbackGetInteger cbDiscoveryDone) {
-        Logger.d(TAG, "guardianIsRunning.get():" + guardianIsRunning.get() + " discoverIsRunning ?: " + discoverIsRunning.get() + " specan run:" + specanIsRunning);
-        if (guardianIsRunning.get() || !discoverIsRunning.compareAndSet(false, true) || specanIsRunning) {
+        Logger.d(TAG, "startDiscovery: " +
+                "guardianIsRunning.get():" + guardianIsRunning.get() +
+                " discoverIsRunning ?: " + discoverIsRunning.get() +
+                " specan run:" + specanIsRunning);
+
+        if (!isAvailableForNewStart(activity) || !discoverIsRunning.compareAndSet(false, true)) {
             cbStartDiscoveryDone.done(false);
+            return;
         }
         Logger.d(TAG, "Start discovery");
         startSpecan(activity, frequency, new GollumCallbackGetBoolean() {
@@ -170,7 +181,6 @@ public class WatchMan {
         Logger.d(TAG, "discoveryIsRunning ? : " + discoverIsRunning.get());
         if (!discoverIsRunning.compareAndSet(true, false)) {
             cbStopDone.done(false);
-            return ;
         }
         if (discoverThread != null) {
             discoverThread.kill();
@@ -223,8 +233,20 @@ public class WatchMan {
      * Indicate if user can call startDiscovery or startGuardian
      * @return
      */
-    public boolean isAvailableForNewStart() {
-        return (!specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning());
+    public boolean isAvailableForNewStart(Activity activity) {
+        return (isConnected && GollumDongle.getInstance(activity).isDeviceConnected() && !specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning());
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean state) {
+        isConnected = state;
+    }
+
+    public void close(Activity activity) {
+        GollumDongle.getInstance(activity).closeDevice();
     }
 
     /**

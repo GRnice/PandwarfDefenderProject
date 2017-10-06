@@ -5,12 +5,14 @@ import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.beardedhen.androidbootstrap.BootstrapBadge;
 import com.beardedhen.androidbootstrap.BootstrapButton;
@@ -23,6 +25,7 @@ import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.tools.Logger;
+import com.example.aventador.protectalarm.tools.Tools;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -93,6 +96,13 @@ public class GuardianFragment extends Fragment {
     }
 
     private void startProtection() {
+        if (!Tools.isValidDb(dbToleranceEditText.getText().toString()) ||
+                !Tools.isValidFrequency(frequencyEditText.getText().toString())) {
+            Toast toast = Toast.makeText(getContext(), "wrong parameters", Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            toast.show();
+            return;
+        }
         startStopProtectionButton.setBackgroundColor(0xFFD9534F); // warning color
         startStopProtectionButton.setText("Stop protection");
         HashMap<String, String> parameters = new HashMap<>();
