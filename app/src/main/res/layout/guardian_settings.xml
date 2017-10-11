@@ -92,6 +92,46 @@
                     android:layout_weight="7"
                     android:max="30" />
             </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="30px" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:weightSum="10"
+                android:layout_height="50dp">
+                <com.beardedhen.androidbootstrap.BootstrapButton
+                    android:layout_width="0px"
+                    android:layout_height="match_parent"
+                    android:text="Save"
+                    app:bootstrapBrand="primary"
+                    app:bootstrapSize="lg"
+                    app:buttonMode="regular"
+                    app:showOutline="false"
+                    app:roundedCorners="true"
+                    android:layout_weight="4"
+                    android:id="@+id/save_config_button" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2" />
+
+                <com.beardedhen.androidbootstrap.BootstrapButton
+                    android:layout_width="0px"
+                    android:layout_height="match_parent"
+                    android:text="Load"
+                    app:bootstrapBrand="primary"
+                    app:bootstrapSize="lg"
+                    app:buttonMode="regular"
+                    app:showOutline="false"
+                    app:roundedCorners="true"
+                    android:layout_weight="4"
+                    android:id="@+id/load_config_button" />
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 

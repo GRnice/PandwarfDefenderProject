@@ -1,5 +1,7 @@
 package com.example.aventador.protectalarm.tools;
 
+import com.example.aventador.protectalarm.storage.Configuration;
+
 /**
  * Created by Aventador on 26/09/2017.
  */

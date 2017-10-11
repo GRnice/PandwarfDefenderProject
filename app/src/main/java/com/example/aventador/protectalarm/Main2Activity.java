@@ -1,5 +1,7 @@
 package com.example.aventador.protectalarm;
 
+import android.*;
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
 import android.support.annotation.CallSuper;
@@ -118,7 +120,10 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
                             android.Manifest.permission.ACCESS_FINE_LOCATION,
-                            android.Manifest.permission.BLUETOOTH},
+                            android.Manifest.permission.BLUETOOTH,
+                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    },
                     REQUEST_CODE_ASK_PERMISSIONS);
             return;
         }

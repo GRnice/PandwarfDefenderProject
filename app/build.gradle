@@ -27,10 +27,24 @@ dependencies {
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
-    compile 'com.comthings.pandwarf:gollum:0.7.1'
-    compile 'org.greenrobot:eventbus:3.0.0'
-    compile 'com.beardedhen:androidbootstrap:2.3.2'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.evernote:android-job:1.1.11'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
     testCompile 'junit:junit:4.12'
+
+    compile 'com.google.code.gson:gson:2.8.2'
+
+    compile 'com.comthings.pandwarf:gollum:0.7.1'
+
+    compile 'org.greenrobot:eventbus:3.0.0'
+
+    compile 'com.beardedhen:androidbootstrap:2.3.2'
+
+
+    compile 'com.evernote:android-job:1.1.11'
+
+    compile 'com.github.angads25:filepicker:1.1.1'
+
+    compile 'com.afollestad.material-dialogs:core:0.9.4.5'
+    compile 'com.afollestad.material-dialogs:commons:0.9.4.5'
+
 }

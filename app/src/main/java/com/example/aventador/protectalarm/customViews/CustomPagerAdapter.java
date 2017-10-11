@@ -49,8 +49,8 @@ public class CustomPagerAdapter extends PagerAdapter {
         return null;
     }
 
-    private void init( ViewPager viewPager) {
-        this.allSubGardians.add(new SettingsSubView("Settings", R.layout.guardian_settings, viewPager));
+    private void init(ViewPager viewPager) {
+        this.allSubGardians.add(new SettingsSubView(context, "Settings", R.layout.guardian_settings, viewPager));
         this.allSubGardians.add(new HistorySubView(context, "History", R.layout.guardian_history));
     }
 

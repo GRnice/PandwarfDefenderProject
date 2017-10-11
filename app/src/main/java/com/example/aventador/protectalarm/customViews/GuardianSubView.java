@@ -21,6 +21,10 @@ public abstract class GuardianSubView implements SeekBar.OnSeekBarChangeListener
         return layoutResId;
     }
 
+    public View getLayout() {
+        return layout;
+    }
+
     public String getTitle() {
         return title;
     }
