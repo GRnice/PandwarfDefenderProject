@@ -68,7 +68,7 @@ public class Tools {
 
             codeAscii = supposedHexa.charAt(i) - 'A'; // check if it's not a letter in [A - F]
             Logger.d(TAG, "code: codeAscii: " + codeAscii + " char: " + supposedHexa.charAt(i));
-            if (codeAscii > 7 || codeAscii < 0) {
+            if (codeAscii > 5 || codeAscii < 0) {
 
             } else {
                 continue;
@@ -78,4 +78,5 @@ public class Tools {
         }
         return true; // empty is not HEXA
     }
+
 }
