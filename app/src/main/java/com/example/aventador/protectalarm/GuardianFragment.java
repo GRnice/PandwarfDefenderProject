@@ -104,6 +104,9 @@ public class GuardianFragment extends Fragment {
                     @Override
                     public void done(Configuration configuration, GollumException e) {
                         if (configuration != null) {
+                            Toast toast = Toast.makeText(getContext(), "config loaded : " + configuration.getTitle(), Toast.LENGTH_SHORT);
+                            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+                            toast.show();
                             setCurrentConfiguration(configuration);
                         }
                     }
@@ -123,6 +126,7 @@ public class GuardianFragment extends Fragment {
                             @Override
                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                 String fileName = dialog.getInputEditText().getText().toString();
+                                currentConfiguration.setTitle(fileName);
                                 FileManager.getInstance().save(getContext(), fileName, currentConfiguration);
                             }
                         })
@@ -146,7 +150,6 @@ public class GuardianFragment extends Fragment {
         CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
         customPagerAdapter.getSettingsSubView().setPeakTolerance(configuration.getPeakTolerance());
         customPagerAdapter.getSettingsSubView().setMarginError(configuration.getMarginError());
-
     }
 
     private void refreshCurrentConfiguration() {
@@ -236,25 +239,44 @@ public class GuardianFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
+            /**
+             * Event from DongleCallbacks {@link com.example.aventador.protectalarm.callbacks.DongleCallbacks}
+             */
             case CONNECTED: {
                 startStopProtectionButton.setEnabled(true);
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case DISCONNECTED: {
                 startStopProtectionButton.setEnabled(false);
                 resetFragment();
                 break;
             }
+
+            /**
+             * Event from ThresholdFragment {@link ThresholdFragment}
+             */
             case FREQUENCY_SELECTED: {
                 String frequencySelected = stateEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 this.frequencyEditText.setText(frequencySelected);
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case SEARCH_OPTIMAL_PEAK_DONE: {
                 String dbTolerance  = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                 this.dbToleranceEditText.setText(dbTolerance);
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case ATTACK_DETECTED: {
                 String dateAttack = stateEvent.getParameter(Parameter.DATE);
                 CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
@@ -265,6 +287,10 @@ public class GuardianFragment extends Fragment {
                 }
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case PROTECTION_FAIL: {
                 resetFragment();
                 break;

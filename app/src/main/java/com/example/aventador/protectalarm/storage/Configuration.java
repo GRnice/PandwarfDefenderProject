@@ -25,6 +25,10 @@ public class Configuration {
     @SerializedName("margin_error")
     private int marginError = 0;
 
+    @Expose
+    @SerializedName("title")
+    private String title = "";
+
     public Configuration() {
 
     }
@@ -68,14 +72,25 @@ public class Configuration {
         this.marginError = marginError;
     }
 
+    public String getTitle() {
+        return this.title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     @Override
     public String toString() {
         return "Configuration: " +
                 "{" +
+                "title: " + title + " ," +
                 "frequency: " + frequency + " ," +
                 "dbTolerance: " + dbTolerance + " ," +
                 "peak tolerance: " + peakTolerance + " ," +
                 "margin error: " + marginError +
                 "}";
     }
+
+
 }
