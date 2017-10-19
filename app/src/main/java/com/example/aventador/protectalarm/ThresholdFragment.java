@@ -133,6 +133,9 @@ public class ThresholdFragment extends Fragment {
         return bodyView;
     }
 
+    /**
+     * Update widgets and send an event "START_SEARCH_THRESHOLD" to {@link Main2Activity}
+     */
     private void startSearchOptimalThreshold() {
         progressBarSearchOptimalThreshold.setVisibility(View.VISIBLE);
         searchOptimalThresholdButton.setText("Stop Searching");
@@ -143,23 +146,30 @@ public class ThresholdFragment extends Fragment {
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopSearchOptimalThreshold();
+                stopSearchOptimalThreshold(); // behavior of searchOptimalThresholdButton changed.
             }
         });
     }
 
+    /**
+     * Update widgets and send an event "STOP_SEARCH_THRESHOLD" to {@link Main2Activity}
+     */
     private void stopSearchOptimalThreshold() {
-        progressBarSearchOptimalThreshold.setVisibility(View.GONE);
-        searchOptimalThresholdButton.setText("Search Optimal Threshold");
-        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_SEARCH_THRESHOLD, ""));
+        progressBarSearchOptimalThreshold.setVisibility(View.GONE); // hide progress bar
+        searchOptimalThresholdButton.setText("Search Optimal Threshold"); // change text
+        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_SEARCH_THRESHOLD, "")); // Post event to Activity.
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startSearchOptimalThreshold();
+                startSearchOptimalThreshold(); // behavior of searchOptimalThresholdButton changed.
             }
         });
     }
 
+    /**
+     * Displays a alertDialog to change the DB value.
+     * When user has modified the db value, an event "DB_TOLERANCE_SELECTED" is posted.
+     */
     private void showDialogDbTolerance() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Set db tolerance (for experimented user)");
@@ -211,15 +221,26 @@ public class ThresholdFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(StateEvent stateEvent) {
         switch (stateEvent.getState()) {
+            /**
+             * Event from DongleCallbacks {@link com.example.aventador.protectalarm.callbacks.DongleCallbacks}
+             */
             case CONNECTED: {
                 resetFragment();
                 searchOptimalThresholdButton.setEnabled(true);
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case DISCONNECTED: {
                 resetFragment();
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case SEARCH_OPTIMAL_PEAK_DONE: {
                 resetFragment();
                 searchOptimalThresholdButton.setEnabled(true);
@@ -228,6 +249,10 @@ public class ThresholdFragment extends Fragment {
                 rssiTextView.setText("Threshold: " + rssi);
                 break;
             }
+
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case SEARCH_OPTIMAL_PEAK_FAIL: {
                 resetFragment();
                 searchOptimalThresholdButton.setEnabled(true);
