@@ -38,6 +38,7 @@ import com.example.aventador.protectalarm.process.Jammer;
 import com.example.aventador.protectalarm.process.Pandwarf;
 import com.example.aventador.protectalarm.process.Scanner;
 import com.example.aventador.protectalarm.tools.Logger;
+import com.example.aventador.protectalarm.tools.Tools;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -312,7 +313,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 }, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
-                        toastShow("Jamming stopped");
                         waiting(1000);
                         Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
                         startGuardian(frequency, dbTolerance, peakTolerance, marginError);
@@ -369,7 +369,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                     @Override
                     public void done(boolean b) {
                         HashMap<String, String> parametersAttackDetected = new HashMap<>();
-                        parametersAttackDetected.put(Parameter.DATE.toString(), getCurrentTime());
+                        parametersAttackDetected.put(Parameter.DATE.toString(), Tools.getCurrentTime());
                         EventBus.getDefault().postSticky(new StateEvent(ATTACK_DETECTED, parametersAttackDetected));
 
                         HashMap<String, String> parameters = new HashMap<>();
@@ -451,13 +451,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     @Override
     public void onPageScrollStateChanged(int state) {
 
-    }
-
-    public String getCurrentTime() {
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
-        String formattedDate = sdf.format(date);
-        return formattedDate; // 03/10/2017 14:48:16
     }
 
     /**

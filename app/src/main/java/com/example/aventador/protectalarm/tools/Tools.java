@@ -2,6 +2,9 @@ package com.example.aventador.protectalarm.tools;
 
 import com.example.aventador.protectalarm.storage.Configuration;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by Aventador on 26/09/2017.
  */
@@ -76,7 +79,15 @@ public class Tools {
 
             return false;
         }
-        return true; // empty is not HEXA
+
+        return true;
+    }
+
+    public static final String getCurrentTime() {
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
+        String formattedDate = sdf.format(date);
+        return formattedDate; // 03/10/2017 14:48:16
     }
 
 }
