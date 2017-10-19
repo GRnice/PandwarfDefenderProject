@@ -120,6 +120,7 @@ public class HomeFragment extends Fragment {
     public void resetFragment() {
         connectionButton.setVisibility(View.INVISIBLE);
         connectionButton.setText("connection");
+        scanProgressbar.setVisibility(View.GONE);
         connectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
