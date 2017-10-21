@@ -302,7 +302,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             public void done(boolean b) {
                 Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
 
-                waiting(1000);
                 Jammer.getInstance().startJamming(Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean startSuccess) {
@@ -313,7 +312,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 }, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
-                        waiting(1000);
                         Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
                         startGuardian(frequency, dbTolerance, peakTolerance, marginError);
                     }

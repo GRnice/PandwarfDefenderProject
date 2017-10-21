@@ -30,6 +30,7 @@ import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.storage.FileManager;
+import com.example.aventador.protectalarm.tools.Logger;
 import com.example.aventador.protectalarm.tools.Tools;
 
 import org.greenrobot.eventbus.EventBus;
@@ -243,6 +244,7 @@ public class GuardianFragment extends Fragment {
              * Event from DongleCallbacks {@link com.example.aventador.protectalarm.callbacks.DongleCallbacks}
              */
             case CONNECTED: {
+                Logger.d(TAG, "event: CONNECTED");
                 startStopProtectionButton.setEnabled(true);
                 break;
             }
@@ -251,6 +253,7 @@ public class GuardianFragment extends Fragment {
              * Event from Main2Activity {@link Main2Activity}
              */
             case DISCONNECTED: {
+                Logger.d(TAG, "event: DISCONNECTED");
                 startStopProtectionButton.setEnabled(false);
                 resetFragment();
                 break;
@@ -260,6 +263,7 @@ public class GuardianFragment extends Fragment {
              * Event from ThresholdFragment {@link ThresholdFragment}
              */
             case FREQUENCY_SELECTED: {
+                Logger.d(TAG, "event: FREQUENCY_SELECTED");
                 String frequencySelected = stateEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 this.frequencyEditText.setText(frequencySelected);
                 break;
@@ -269,6 +273,7 @@ public class GuardianFragment extends Fragment {
              * Event from Main2Activity {@link Main2Activity}
              */
             case SEARCH_OPTIMAL_PEAK_DONE: {
+                Logger.d(TAG, "event: SEARCH_OPTIMAL_PEAK_DONE");
                 String dbTolerance  = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                 this.dbToleranceEditText.setText(dbTolerance);
                 break;
@@ -278,6 +283,7 @@ public class GuardianFragment extends Fragment {
              * Event from Main2Activity {@link Main2Activity}
              */
             case ATTACK_DETECTED: {
+                Logger.d(TAG, "event: ATTACK_DETECTED");
                 String dateAttack = stateEvent.getParameter(Parameter.DATE);
                 CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
                 HistoryLog historyLog = new HistoryLog(HistoryLog.WARNING_LEVEL.HIGH, dateAttack);
@@ -292,6 +298,7 @@ public class GuardianFragment extends Fragment {
              * Event from Main2Activity {@link Main2Activity}
              */
             case PROTECTION_FAIL: {
+                Logger.d(TAG, "event: PROTECTION_FAIL");
                 resetFragment();
                 break;
             }
