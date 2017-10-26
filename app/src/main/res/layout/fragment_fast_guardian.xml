@@ -1,0 +1,97 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.example.aventador.protectalarm.FastGuardianFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="10">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:weightSum="10"
+            android:orientation="horizontal">
+
+            <TextView
+                android:text="Frequency :"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:id="@+id/frequency_fast_guardian_textview"
+                android:layout_weight="5"
+                android:gravity="center_vertical"
+                android:textSize="18sp" />
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:inputType="numberSigned"
+                android:ems="10"
+                android:id="@+id/frequency_fast_guardian_edittext"
+                android:layout_weight="5
+
+"
+                android:text="433800000" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4.5"
+            android:orientation="horizontal"></LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal">
+
+            <com.beardedhen.androidbootstrap.BootstrapProgressBar
+                android:id="@+id/fast_guardian_progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:animated="true"
+                app:bootstrapBrand="info"
+                app:striped="true" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2.5"
+            android:orientation="vertical"
+            android:weightSum="10">
+
+            <CheckBox
+                android:id="@+id/checkBox_fast_guardian_start_after_scan"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="5"
+                android:text="Start protection after scan ending" />
+
+            <com.beardedhen.androidbootstrap.BootstrapButton
+                android:id="@+id/button_fast_guardian_scan_protect"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="5"
+                android:text="Scan"
+                app:bootstrapBrand="success"
+                app:bootstrapSize="lg"
+                app:buttonMode="regular"
+                app:roundedCorners="true"
+                app:showOutline="false" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>
