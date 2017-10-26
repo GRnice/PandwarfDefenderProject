@@ -44,6 +44,7 @@ import static android.view.View.GONE;
 public class ThresholdFragment extends Fragment {
 
     private static final String TAG = "ThresholdFragment";
+    private boolean frequencyChangeEventReceived;
     private LinearLayout layoutSelectFrequency;
     private EditText frequencyEditText;
 
@@ -78,6 +79,7 @@ public class ThresholdFragment extends Fragment {
 
         // -------------------- //
         View bodyView = inflater.inflate(R.layout.fragment_threshold, container, false);
+        frequencyChangeEventReceived = false;
         layoutSelectFrequency = (LinearLayout) bodyView.findViewById(R.id.frequency_select_layout);
         frequencyEditText = (EditText) bodyView.findViewById(R.id.frequencyEditText);
 
@@ -110,6 +112,7 @@ public class ThresholdFragment extends Fragment {
                 startSearchOptimalThreshold();
             }
         });
+
         frequencyEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -123,13 +126,7 @@ public class ThresholdFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                String frequency = frequencyEditText.getText().toString();
-                if (Tools.isValidFrequency(frequency)) {
-                    Logger.d(TAG, "post new frequency");
-                    HashMap<String, String> parameters = new HashMap<String, String>();
-                    parameters.put(Parameter.FREQUENCY.toString(), frequency);
-                    EventBus.getDefault().postSticky(new StateEvent(State.FREQUENCY_SELECTED, parameters));
-                }
+                frequencyChanged();
             }
         });
         return bodyView;
@@ -223,6 +220,18 @@ public class ThresholdFragment extends Fragment {
         });
     }
 
+    private void frequencyChanged() {
+        String frequency = frequencyEditText.getText().toString();
+        if (Tools.isValidFrequency(frequency) && !frequencyChangeEventReceived) {
+            Logger.d(TAG, "post new frequency");
+            HashMap<String, String> parameters = new HashMap<String, String>();
+            parameters.put(Parameter.FREQUENCY.toString(), frequency);
+            EventBus.getDefault().postSticky(new StateEvent(State.FREQUENCY_SELECTED, parameters));
+        } else {
+            frequencyChangeEventReceived = false;
+        }
+    }
+
     /**
      * Used by EventBus
      * Called when a Publisher send a state.
@@ -246,6 +255,15 @@ public class ThresholdFragment extends Fragment {
             case DISCONNECTED: {
                 resetFragment();
                 searchOptimalThresholdButton.setEnabled(false);
+                break;
+            }
+
+            case FREQUENCY_SELECTED: {
+                Logger.d(TAG, "event: FREQUENCY_SELECTED");
+                frequencyChangeEventReceived = true;
+                String frequencySelected = stateEvent.getParameters().getString(Parameter.FREQUENCY.toString());
+                this.frequencyEditText.setText(frequencySelected);
+                frequencyChangeEventReceived = false;
                 break;
             }
 

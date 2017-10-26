@@ -5,7 +5,9 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +29,7 @@ import com.example.aventador.protectalarm.customViews.SettingsSubView;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
+import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.storage.FileManager;
@@ -43,6 +46,9 @@ import java.util.HashMap;
 public class GuardianFragment extends Fragment {
 
     private final static String TAG = "GuardianFragment";
+
+    private boolean frequencyChangeEventReceived;
+
     private LinearLayout layoutStartStopProtection;
     private BootstrapButton startStopProtectionButton;
     private TextView frequencyTextView;
@@ -80,8 +86,25 @@ public class GuardianFragment extends Fragment {
         View bodyView = inflater.inflate(R.layout.fragment_guardian, container, false);
         // -------------------- //
         currentConfiguration = new Configuration(); // contains values of frequency, dbTolerance, peak tolerance & margin error.
+        frequencyChangeEventReceived = false;
         frequencyTextView = (TextView) bodyView.findViewById(R.id.frequency_guardian_textview);
         frequencyEditText = (EditText) bodyView.findViewById(R.id.frequency_guardian_edittext);
+        frequencyEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                frequencyChanged();
+            }
+        });
         dbToleranceTextView = (TextView) bodyView.findViewById(R.id.db_tolerance_guardian_textview);
         dbToleranceEditText = (EditText) bodyView.findViewById(R.id.dbtolerance_guardian_edittext);
 
@@ -268,6 +291,18 @@ public class GuardianFragment extends Fragment {
         return viewPager.getCurrentItem() == HISTORY_PAGE; // PAGE 1 is the historic view
     }
 
+    private void frequencyChanged() {
+        String frequency = frequencyEditText.getText().toString();
+        if (Tools.isValidFrequency(frequency) && !frequencyChangeEventReceived) {
+            Logger.d(TAG, "post new frequency");
+            HashMap<String, String> parameters = new HashMap<String, String>();
+            parameters.put(Parameter.FREQUENCY.toString(), frequency);
+            EventBus.getDefault().postSticky(new StateEvent(State.FREQUENCY_SELECTED, parameters));
+        } else {
+            frequencyChangeEventReceived = false;
+        }
+    }
+
     /**
      * Used by EventBus
      * Called when a Publisher send a action to be executed.
@@ -309,8 +344,10 @@ public class GuardianFragment extends Fragment {
              */
             case FREQUENCY_SELECTED: {
                 Logger.d(TAG, "event: FREQUENCY_SELECTED");
+                frequencyChangeEventReceived = true;
                 String frequencySelected = stateEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 this.frequencyEditText.setText(frequencySelected);
+                frequencyChangeEventReceived = false;
                 break;
             }
 
