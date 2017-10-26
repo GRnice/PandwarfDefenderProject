@@ -1,6 +1,7 @@
 package com.example.aventador.protectalarm.process.Runners;
 
 import android.app.Activity;
+import android.support.annotation.CallSuper;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -29,13 +30,52 @@ public class GuardianThread extends Runner {
     private double marginError;
     private int peakTolerance;
 
+    private boolean retriggerable;
+    private GollumCallbackGetBoolean cbThreadDone;
 
-    public GuardianThread(Activity activity, int nbSequences, int nbScan, int nbChannels, int dbTolerance, int peakTolerance, int marginError, GollumCallbackGetBoolean cbAttackDetected) {
+    /**
+     *
+     * @param activity
+     * @param nbSequences
+     * @param nbScan
+     * @param nbChannels
+     * @param dbTolerance
+     * @param peakTolerance
+     * @param marginError
+     * @param cbAttackDetected
+     */
+    public GuardianThread(Activity activity, int nbSequences, int nbScan, int nbChannels, int dbTolerance, int peakTolerance, int marginError,
+                          GollumCallbackGetBoolean cbAttackDetected) {
+        this(activity, nbSequences, nbScan, nbChannels, dbTolerance, peakTolerance, marginError, cbAttackDetected, null);
+    }
+
+
+    /**
+     *
+     * @param activity
+     * @param nbSequences
+     * @param nbScan
+     * @param nbChannels
+     * @param dbTolerance
+     * @param peakTolerance
+     * @param marginError
+     * @param cbAttackDetected
+     * @param cbThreadDone
+     */
+    public GuardianThread(Activity activity, int nbSequences, int nbScan, int nbChannels, int dbTolerance, int peakTolerance, int marginError,
+                          GollumCallbackGetBoolean cbAttackDetected, @Nullable GollumCallbackGetBoolean cbThreadDone) {
         super(activity, nbScan, nbSequences, nbChannels);
         this.dbTolerance = dbTolerance;
         this.cbAttackDetected = cbAttackDetected;
         this.peakTolerance = (int) ((peakTolerance / 100.0) * nbSequences);
         this.marginError = marginError / 100.0;
+        this.cbThreadDone = cbThreadDone;
+    }
+
+    @CallSuper
+    public void start(boolean retriggerable) {
+        this.retriggerable = retriggerable;
+        super.start();
     }
 
     @Override
@@ -87,8 +127,20 @@ public class GuardianThread extends Runner {
                     Logger.d(TAG, "peak detected, peakDetected: " + peakDetected);
                 }
             }
+
+            if (!isRetriggerable()) {
+                run.set(false);
+            }
+        }
+
+        if (cbThreadDone != null) {
+            cbThreadDone.done(true);
         }
 
 
+    }
+
+    public boolean isRetriggerable() {
+        return retriggerable;
     }
 }
