@@ -16,7 +16,7 @@ import com.example.aventador.protectalarm.customViews.HistoryLog;
 import java.util.List;
 
 /**
- * Created by Aventador on 03/10/2017.
+ * Created by Giangrasso on 03/10/2017.
  */
 
 /**

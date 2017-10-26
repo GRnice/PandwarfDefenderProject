@@ -18,7 +18,7 @@ import com.example.aventador.protectalarm.customViews.adapters.LogAdapter;
 import java.util.ArrayList;
 
 /**
- * Created by Aventador on 03/10/2017.
+ * Created by Giangrasso on 03/10/2017.
  */
 
 /**

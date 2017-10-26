@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.example.aventador.protectalarm.R;
 
 /**
- * Created by Aventador on 02/10/2017.
+ * Created by Giangrasso on 02/10/2017.
  */
 
 /**

@@ -14,7 +14,7 @@ import com.example.aventador.protectalarm.tools.Logger;
 import java.util.ArrayList;
 
 /**
- * Created by Aventador on 02/10/2017.
+ * Created by Giangrasso on 02/10/2017.
  */
 
 

@@ -9,7 +9,7 @@ import com.example.aventador.protectalarm.tools.Logger;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by Aventador on 21/10/2017.
+ * Created by Giangrasso on 21/10/2017.
  */
 
 public abstract class Runner extends Thread {

@@ -21,7 +21,7 @@ import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.storage.FileManager;
 
 /**
- * Created by Aventador on 03/10/2017.
+ * Created by Giangrasso on 03/10/2017.
  */
 
 /**

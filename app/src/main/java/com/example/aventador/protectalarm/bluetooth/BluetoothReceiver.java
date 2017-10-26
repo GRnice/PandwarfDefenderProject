@@ -13,7 +13,7 @@ import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteg
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by Aventador on 29/09/2017.
+ * Created by Giangrasso on 29/09/2017.
  */
 
 /**

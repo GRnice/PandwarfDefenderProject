@@ -17,7 +17,7 @@ import no.nordicsemi.android.nrftoolbox.scanner.ExtendedBluetoothDevice;
 import no.nordicsemi.android.nrftoolbox.scanner.ScannerListener;
 
 /**
- * Created by Aventador on 21/09/2017.
+ * Created by Giangrasso on 21/09/2017.
  */
 
 /**

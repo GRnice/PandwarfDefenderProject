@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.annotations.Since;
 
 /**
- * Created by Aventador on 11/10/2017.
+ * Created by Giangrasso on 11/10/2017.
  */
 
 /**
@@ -46,7 +46,7 @@ public class Configuration {
 
     }
 
-    public Configuration(int dbTolerance, int frequency, int peakTolerance, int marginError) {
+    public Configuration(int frequency, int dbTolerance, int peakTolerance, int marginError) {
         this.dbTolerance = dbTolerance;
         this.frequency = frequency;
         this.peakTolerance = peakTolerance;

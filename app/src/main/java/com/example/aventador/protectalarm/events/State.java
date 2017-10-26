@@ -1,7 +1,7 @@
 package com.example.aventador.protectalarm.events;
 
 /**
- * Created by Aventador on 21/09/2017.
+ * Created by Giangrasso on 21/09/2017.
  */
 
 public enum State {

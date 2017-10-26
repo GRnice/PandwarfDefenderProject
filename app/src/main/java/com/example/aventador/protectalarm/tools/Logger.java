@@ -3,7 +3,7 @@ package com.example.aventador.protectalarm.tools;
 import android.util.Log;
 
 /**
- * Created by Aventador on 26/09/2017.
+ * Created by Giangrasso on 26/09/2017.
  */
 
 public class Logger {

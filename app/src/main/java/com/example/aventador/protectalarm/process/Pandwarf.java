@@ -12,7 +12,7 @@ import com.example.aventador.protectalarm.tools.Logger;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by Aventador on 25/09/2017.
+ * Created by Giangrasso on 25/09/2017.
  */
 
 /**

@@ -1,7 +1,7 @@
 package com.example.aventador.protectalarm.process;
 
 /**
- * Created by Aventador on 27/09/2017.
+ * Created by Giangrasso on 27/09/2017.
  */
 
 import android.app.Activity;

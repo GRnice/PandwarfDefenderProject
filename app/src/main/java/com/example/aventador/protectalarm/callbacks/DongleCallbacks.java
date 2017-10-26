@@ -8,7 +8,7 @@ import com.example.aventador.protectalarm.tools.Logger;
 import org.greenrobot.eventbus.EventBus;
 
 /**
- * Created by Aventador on 21/09/2017.
+ * Created by Giangrasso on 21/09/2017.
  */
 
 /**

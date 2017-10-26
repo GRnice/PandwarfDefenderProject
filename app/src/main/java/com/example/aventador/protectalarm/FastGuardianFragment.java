@@ -23,6 +23,7 @@ import com.example.aventador.protectalarm.process.Pandwarf;
 import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.tools.Logger;
 import com.example.aventador.protectalarm.tools.Tools;
+import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -217,6 +218,16 @@ public class FastGuardianFragment extends Fragment implements View.OnClickListen
                 Logger.d(TAG, "event: CONNECTED");
                 resetFragment();
                 break;
+            }
+
+            case FAST_PROTECTION_ANALYZER_DONE: {
+                Logger.d(TAG, "event: FAST_PROTECTION_ANALYZER_DONE");
+                String configurationSerialized = stateEvent.getParameters().getString(Parameter.CONFIGURATION.toString());
+                Configuration configuration = new Gson().fromJson(configurationSerialized, Configuration.class);
+                if (configuration != null) {
+                    currentConfiguration = configuration;
+                    resetFragment();
+                }
             }
 
             /**

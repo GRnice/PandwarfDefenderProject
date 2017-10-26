@@ -118,7 +118,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         });
         Jammer.getInstance().init(this);
         EventBus.getDefault().register(this);
-
+        Recaller.getInstance(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
                             android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -234,6 +234,13 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 });
                 break;
             }
+
+            case START_FAST_PROTECTION_ANALYZER: {
+                String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
+                startFastProtectionAnalyser(frequency);
+                break;
+            }
+
             case START_SEARCH_THRESHOLD: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 startThresholdSearch(frequency);
@@ -322,6 +329,54 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         startGuardian(frequency, dbTolerance, peakTolerance, marginError);
                     }
                 });
+            }
+        });
+    }
+
+    /**
+     *
+     * @param frequency
+     */
+    private void startFastProtectionAnalyser(String frequency) {
+        Logger.d(TAG, "startFastProtectionAnalyser");
+        Pandwarf.getInstance().startFastProtectionAnalyser(this, Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean startSuccess) {
+                if (!startSuccess) {
+                    Logger.e(TAG, "startFastProtectionAnalyser: fast protection analyzer not started, FAIL");
+                    EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_FAIL, ""));
+                } else {
+                    toastShow("Fast protection analyzer started");
+                }
+
+            }
+        }, new GollumCallbackGetConfiguration() {
+            @Override
+            public void done(boolean success, Configuration configuration) {
+                /*
+                Called when a good configuration is found.
+                or not.
+                 */
+                Pandwarf.getInstance().stopFastProtectionAnalyzer(Main2Activity.this, new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean stopSuccess) {
+                        if (!stopSuccess) {
+                            toastShow("error when terminating fast protection analyzer");
+                        } else {
+                            toastShow("Fast protection analyzer stopped");
+                        }
+                    }
+                });
+
+                if (!success) {
+                    toastShow("Rapid protection analyzer has no result");
+                    EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_FAIL, ""));
+                } else {
+                    toastShow("Rapid Protection analyzer found the right parameters");
+                    HashMap<String, String> parameters = new HashMap<>();
+                    parameters.put(Parameter.CONFIGURATION.toString(), new Gson().toJson(configuration));
+                    EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_DONE, parameters));
+                }
             }
         });
     }
