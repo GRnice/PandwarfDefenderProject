@@ -27,6 +27,11 @@ import java.io.PrintWriter;
  * Created by Aventador on 11/10/2017.
  */
 
+/**
+ * He is responsible for loading and saving the Configurations.
+ * It use Gson library to serialize/deserialize the differents configs.
+ * It use a FilePicker from android arsenal to select a config.
+ */
 public class FileManager {
     private final static String TAG = "FileManager";
     private static FileManager instance;
@@ -45,6 +50,11 @@ public class FileManager {
         gson = gsonBuilder.create();
     }
 
+    /**
+     * Get the content of the given file.
+     * @param file
+     * @return
+     */
     @Nullable
     private String getFileContent(@NonNull File file) {
         try {
@@ -62,6 +72,11 @@ public class FileManager {
         }
     }
 
+    /**
+     * Get a configuration from the given filePath. May returns null
+     * @param filePath
+     * @return
+     */
     @Nullable
     private Configuration load(@NonNull String filePath) {
         Logger.d(TAG, "private load()");
@@ -71,7 +86,7 @@ public class FileManager {
             String fileContent = getFileContent(file);
             if (fileContent != null) {
                 Logger.d(TAG, "fileContent is: " + fileContent);
-                return gson.fromJson(fileContent, Configuration.class);
+                return gson.fromJson(fileContent, Configuration.class); // deserializing... and return the Configuration.
             }
         } else {
             Logger.d(TAG, "file don't exist");
@@ -79,6 +94,13 @@ public class FileManager {
         return null;
     }
 
+    /**
+     * Save the configuration in directory "Documents/PandwarfDefender/configs/ in a file : fileName.json
+     * @param context
+     * @param fileName
+     * @param configuration
+     * @return true -> success, false -> fail
+     */
     public boolean save(@NonNull Context context, @NonNull String fileName, @NonNull Configuration configuration) {
         Logger.d(TAG, "private save()");
 
@@ -86,7 +108,7 @@ public class FileManager {
         String rootDir = context.getString(R.string.root_dir);
         String configDir = context.getString(R.string.config_dir);
         File configLocation = new File(fileDirDocuments.toString() + "/" + rootDir + "/" + configDir);
-        configLocation.mkdirs();
+        configLocation.mkdirs(); // create missing directories.
         Logger.d(TAG, "configLocation: " + configLocation);
         File fileConfiguration = new File(configLocation.getAbsolutePath().toString() + "/" + fileName + ".json");
 
@@ -95,7 +117,7 @@ public class FileManager {
             FileOutputStream fos = new FileOutputStream(fileConfiguration);
             PrintWriter printWriter = new PrintWriter(fos);
             Logger.d(TAG, "configuration: " + configuration.toString());
-            printWriter.print(gson.toJson(configuration));
+            printWriter.print(gson.toJson(configuration)); // serializing and store it in the file.
             printWriter.close();
             return true;
         } catch (FileNotFoundException e) {
@@ -109,6 +131,12 @@ public class FileManager {
         }
     }
 
+    /**
+     * Load a configuration. This method displays the file picker. this file picker get the selected file config.
+     * This file content is deserialized and given to the callback cbDone
+     * @param context
+     * @param cbDone
+     */
     public void load(@NonNull Context context, @NonNull final GollumCallbackGetGeneric<Configuration> cbDone) {
         Logger.d(TAG, "load()");
         DialogProperties dialogProperties = new DialogProperties();

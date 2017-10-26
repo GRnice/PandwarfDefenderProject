@@ -10,6 +10,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -21,6 +22,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
@@ -139,31 +141,33 @@ public class ThresholdFragment extends Fragment {
     private void startSearchOptimalThreshold() {
         progressBarSearchOptimalThreshold.setVisibility(View.VISIBLE);
         searchOptimalThresholdButton.setText("Stop Searching");
-        HashMap<String, String> parameters = new HashMap<>();
-
-        parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
-        EventBus.getDefault().postSticky(new ActionEvent(Action.START_SEARCH_THRESHOLD, parameters));
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 stopSearchOptimalThreshold(); // behavior of searchOptimalThresholdButton changed.
             }
         });
+
+        String frequency = frequencyEditText.getText().toString();
+        if (!Tools.isValidFrequency(frequency)) { // if frequency is wrong.
+            Toast toast = Toast.makeText(getContext(), "Wrong frequency", Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            toast.show();
+            return;
+        }
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put(Parameter.FREQUENCY.toString(), frequency);
+
+        EventBus.getDefault().postSticky(new ActionEvent(Action.START_SEARCH_THRESHOLD, parameters));
+
     }
 
     /**
      * Update widgets and send an event "STOP_SEARCH_THRESHOLD" to {@link Main2Activity}
      */
     private void stopSearchOptimalThreshold() {
-        progressBarSearchOptimalThreshold.setVisibility(View.GONE); // hide progress bar
-        searchOptimalThresholdButton.setText("Search Optimal Threshold"); // change text
+        resetFragment();
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_SEARCH_THRESHOLD, "")); // Post event to Activity.
-        searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startSearchOptimalThreshold(); // behavior of searchOptimalThresholdButton changed.
-            }
-        });
     }
 
     /**
@@ -201,8 +205,14 @@ public class ThresholdFragment extends Fragment {
         builder.show();
     }
 
+    /**
+     * Reset the view:
+     * - text button is reset
+     * - progress bar hidden
+     * - startSearchOptimalThreshold() called when searchOptimalThresholdButton is pressed
+     *
+     */
     public void resetFragment() {
-        searchOptimalThresholdButton.setEnabled(false);
         searchOptimalThresholdButton.setText("Search Optimal Threshold");
         progressBarSearchOptimalThreshold.setVisibility(View.GONE);
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
@@ -235,6 +245,7 @@ public class ThresholdFragment extends Fragment {
              */
             case DISCONNECTED: {
                 resetFragment();
+                searchOptimalThresholdButton.setEnabled(false);
                 break;
             }
 
@@ -243,7 +254,6 @@ public class ThresholdFragment extends Fragment {
              */
             case SEARCH_OPTIMAL_PEAK_DONE: {
                 resetFragment();
-                searchOptimalThresholdButton.setEnabled(true);
                 String rssi = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                 rssiTolerance = rssi;
                 rssiTextView.setText("Threshold: " + rssi);

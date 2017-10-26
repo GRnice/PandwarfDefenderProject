@@ -11,8 +11,20 @@ import org.greenrobot.eventbus.EventBus;
  * Created by Aventador on 21/09/2017.
  */
 
+/**
+ * Receives differents signals from the PandwaRF.
+ * the only signal processed is onDeviceReady.
+ */
 public class DongleCallbacks implements GollumBleManagerCallbacks {
     private final static String TAG = "DongleCallbacks";
+
+    @Override
+    public void onDeviceReady() {
+        Logger.d(TAG, "onDeviceReady");
+        EventBus.getDefault().postSticky(new StateEvent(State.CONNECTED, "")); // Send an event "CONNECTED"
+        // Main activity and all fragments catch this event. /!\ /!\
+    }
+
     @Override
     public void onDeviceNameValueReceived(String s) {
 
@@ -136,11 +148,7 @@ public class DongleCallbacks implements GollumBleManagerCallbacks {
 
     }
 
-    @Override
-    public void onDeviceReady() {
-        Logger.d(TAG, "onDeviceReady");
-        EventBus.getDefault().postSticky(new StateEvent(State.CONNECTED, ""));
-    }
+
 
     @Override
     public void onBatteryValueReceived(int i) {

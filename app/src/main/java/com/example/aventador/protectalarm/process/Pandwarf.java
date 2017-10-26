@@ -1,8 +1,6 @@
 package com.example.aventador.protectalarm.process;
 
 import android.app.Activity;
-import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
@@ -11,8 +9,6 @@ import com.example.aventador.protectalarm.process.Runners.DiscoverThread;
 import com.example.aventador.protectalarm.process.Runners.GuardianThread;
 import com.example.aventador.protectalarm.tools.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -50,7 +46,7 @@ public class Pandwarf {
     private boolean isConnected;
     private AtomicBoolean guardianIsRunning;
     private AtomicBoolean discoverIsRunning;
-    private boolean specanIsRunning;
+    private AtomicBoolean specanIsRunning;
     private GuardianThread guardianThread;
     private DiscoverThread discoverThread;
     private static final String TAG = "Pandwarf";
@@ -64,14 +60,26 @@ public class Pandwarf {
     }
 
     private Pandwarf() {
+        reset();
+    }
+
+    private boolean reset() {
+        if (isConnected()) {
+            Logger.e(TAG, "reset: dongle must be disconnected");
+            return false;
+        }
         guardianIsRunning = new AtomicBoolean(false);
         discoverIsRunning = new AtomicBoolean(false);
-        specanIsRunning = false;
+        specanIsRunning = new AtomicBoolean(false);
         isConnected = false;
+        return true;
     }
 
     /**
+     * Start the protection, is called when user click on button "start protection" of guardian fragment.
      *
+     * - cbStartGuardianDone is called when the guardian is started (true) or not (false).
+     * - cbAttackDetected is called when the guardian detects an attack.
      * @param activity
      * @param frequency
      * @param dbTolerance
@@ -86,7 +94,9 @@ public class Pandwarf {
                 discoverIsRunning.get() + " guardianIsRunning ?: " +
                 guardianIsRunning.get() + " specan run:" + specanIsRunning);
 
-        if (!isAvailableForNewStart(activity) || !guardianIsRunning.compareAndSet(false, true)) {
+        if (!isAvailable(activity) || !guardianIsRunning.compareAndSet(false, true)) {
+            // if PandwaRF is not isAvailable for a new task  or  if the guardian is already on run.
+            Logger.e(TAG, "startGuardian: guardian not ready");
             cbStartGuardianDone.done(false);
             return;
         }
@@ -98,6 +108,8 @@ public class Pandwarf {
                 if (startSuccess) {
                     guardianThread = new GuardianThread(activity, GUARDIAN_NB_SEQUENCES, NB_SCAN_BY_SEQUENCE, NB_CHANNELS, dbTolerance, peakTolerance, marginError, cbAttackDetected);
                     guardianThread.start();
+                } else {
+                    Logger.e(TAG, "startGuardian: specan not started");
                 }
                 cbStartGuardianDone.done(startSuccess);
             }
@@ -105,7 +117,9 @@ public class Pandwarf {
     }
 
     /**
-     *
+     * start searching the threshold value in decibel
+     * - cbStartDiscoveryDone called with "true"  when the specan is started
+     * - cbDiscoveryDone called when a threshold value is found
      * @param activity
      * @param frequency
      * @param cbStartDiscoveryDone
@@ -118,7 +132,7 @@ public class Pandwarf {
                 " discoverIsRunning ?: " + discoverIsRunning.get() +
                 " specan run:" + specanIsRunning);
 
-        if (!isAvailableForNewStart(activity) || !discoverIsRunning.compareAndSet(false, true)) {
+        if (!isAvailable(activity) || !discoverIsRunning.compareAndSet(false, true)) {
             cbStartDiscoveryDone.done(false);
             return;
         }
@@ -129,6 +143,8 @@ public class Pandwarf {
                 if (success) {
                     discoverThread = new DiscoverThread(activity, NB_SCAN_BY_SEQUENCE, DISCOVERY_NB_SEQUENCES, NB_CHANNELS, cbDiscoveryDone);
                     discoverThread.start();
+                } else {
+                    discoverIsRunning.set(false); // reset to false.
                 }
                 cbStartDiscoveryDone.done(success);
 
@@ -147,9 +163,14 @@ public class Pandwarf {
         GollumDongle.getInstance(activity).rfSpecanStart(0, frequency, FREQUENCY_BY_CHANNELS, NB_CHANNELS, DELAY_PACKETS_RSSI_MS, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
-                specanIsRunning = true;
-                Logger.d(TAG, "specan started");
-                cbDone.done(true);
+                if (i < 0) {
+                    Logger.e(TAG, "startSpecan: specan not started");
+                    cbDone.done(false);
+                } else {
+                    Logger.d(TAG, "specan started");
+                    specanIsRunning.set(true);
+                    cbDone.done(true);
+                }
             }
         });
     }
@@ -163,20 +184,27 @@ public class Pandwarf {
         GollumDongle.getInstance(activity).rfSpecanStop(0, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
-                specanIsRunning = false;
-                cbStopDone.done(true);
+                if (i < 0) {
+                    Logger.e(TAG, "startSpecan: specan not stopped");
+                    cbStopDone.done(false);
+                } else {
+                    Logger.d(TAG, "specan is stopped");
+                    specanIsRunning.set(false);
+                    cbStopDone.done(true);
+                }
             }
         });
     }
 
     /**
-     *
+     * stop searching the threshold value in decibel
      * @param activity
      */
     public void stopDiscovery(Activity activity, GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stop discovery");
         Logger.d(TAG, "discoveryIsRunning ? : " + discoverIsRunning.get());
         if (!discoverIsRunning.compareAndSet(true, false)) {
+            Logger.e(TAG, "stopDiscovery: already stopped");
             cbStopDone.done(false);
         }
         if (discoverThread != null) {
@@ -187,15 +215,23 @@ public class Pandwarf {
 
     }
 
+    /**
+     * Stop the protection
+     * @param activity
+     * @param cbStopDone
+     */
     public void stopGuardian(final Activity activity, GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stopGuardian()");
         Logger.d(TAG, "guardianIsRunning ? : " + guardianIsRunning.get());
         if (!guardianIsRunning.compareAndSet(true, false)) {
+            Logger.e(TAG, "stopGuardian: guardian already stopped");
             cbStopDone.done(false);
             return;
         }
         if (guardianThread != null) {
+            Logger.d(TAG, "stopGuardian: kill");
             guardianThread.kill();
+            Logger.d(TAG, "stopGuardian: end kill");
         }
 
         stopSpecan(activity, cbStopDone);
@@ -207,7 +243,7 @@ public class Pandwarf {
      * @return
      */
     public boolean specanIsRunning() {
-        return specanIsRunning;
+        return specanIsRunning.get();
     }
 
     /**
@@ -230,8 +266,9 @@ public class Pandwarf {
      * Indicate if user can call startDiscovery or startGuardian
      * @return
      */
-    public boolean isAvailableForNewStart(Activity activity) {
-        return (isConnected && GollumDongle.getInstance(activity).isDeviceConnected() && !specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning());
+    public boolean isAvailable(Activity activity) {
+        return (isConnected && GollumDongle.getInstance(activity).isDeviceConnected() &&
+                !specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning() && !Jammer.getInstance().isRunning());
     }
 
     public boolean isConnected() {
@@ -242,6 +279,11 @@ public class Pandwarf {
         isConnected = state;
     }
 
+    /**
+     * close the device.
+     * setConnected(false) will be called automatically
+     * @param activity
+     */
     public void close(Activity activity) {
         GollumDongle.getInstance(activity).closeDevice();
     }

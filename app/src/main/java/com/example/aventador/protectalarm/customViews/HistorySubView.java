@@ -21,6 +21,10 @@ import java.util.ArrayList;
  * Created by Aventador on 03/10/2017.
  */
 
+/**
+ * HistorySubView is responsible for displaying the history of differents events 'attack detected, protection started..."
+ * HistorySubView is the controller of the history sub view. It extend GuardianSubView
+ */
 public class HistorySubView extends GuardianSubView {
 
     private ListView listViewLogs;
@@ -33,6 +37,12 @@ public class HistorySubView extends GuardianSubView {
         this.context = context; // for generate LogAdapter
     }
 
+    /**
+     * Add a log the history.
+     * clear button is displayed, and the log is added to the LogAdapter
+     * after that the log is displayed into the listview.
+     * @param log
+     */
     public void addLog(HistoryLog log) {
         clearButton.setVisibility(View.VISIBLE);
         LogAdapter logAdapter = (LogAdapter) listViewLogs.getAdapter();
@@ -40,6 +50,12 @@ public class HistorySubView extends GuardianSubView {
         logAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Like onCreateView, this method inflate the view and gets all widgets.
+     * @param inflater
+     * @param viewGroup
+     * @return
+     */
     @Override
     public View instantiate(LayoutInflater inflater, ViewGroup viewGroup) {
         layout = inflater.inflate(getLayoutResId(), viewGroup, false);
@@ -53,6 +69,7 @@ public class HistorySubView extends GuardianSubView {
 
     @Override
     public void onClick(View view) {
+        // if clear button is pressed -> flush the history.
         if (view == clearButton) {
             LogAdapter logAdapter = (LogAdapter) listViewLogs.getAdapter();
             logAdapter.clear();

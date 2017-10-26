@@ -17,6 +17,12 @@ import java.util.ArrayList;
  * Created by Aventador on 02/10/2017.
  */
 
+
+/**
+ * This PagerAdapter is used by Guardian fragment
+ *
+ * This object store all sub views (SettingsSubView & HistorySubView)
+ */
 public class CustomPagerAdapter extends PagerAdapter {
 
     private static final String TAG = "CustomPagerAdapter";
@@ -25,13 +31,18 @@ public class CustomPagerAdapter extends PagerAdapter {
 
     public CustomPagerAdapter(Context context, ViewPager viewPager) {
         this.context = context;
-        this.allSubGardians = new ArrayList<>();
+        this.allSubGardians = new ArrayList<>(); // contains all subviews of Guardian fragment.
         init(viewPager);
     }
 
+    /**
+     * Returns the SettingsSubView object.
+     * @return
+     */
+    @Nullable
     public SettingsSubView getSettingsSubView() {
-        for (int i = 0 ; i < allSubGardians.size() ; i++) {
-            if (allSubGardians.get(i)instanceof SettingsSubView) {
+        for (int i = 0; i < allSubGardians.size(); i++) {
+            if (allSubGardians.get(i) instanceof SettingsSubView) {
                 return (SettingsSubView) allSubGardians.get(i);
             }
         }
@@ -39,9 +50,15 @@ public class CustomPagerAdapter extends PagerAdapter {
         return null;
     }
 
+    /**
+     * Returns the HistorySubView object.
+     *
+     * @return
+     */
+    @Nullable
     public HistorySubView getHistorySubView() {
-        for (int i = 0 ; i < allSubGardians.size() ; i++) {
-            if (allSubGardians.get(i)instanceof HistorySubView) {
+        for (int i = 0; i < allSubGardians.size(); i++) {
+            if (allSubGardians.get(i) instanceof HistorySubView) {
                 return (HistorySubView) allSubGardians.get(i);
             }
         }
@@ -49,11 +66,22 @@ public class CustomPagerAdapter extends PagerAdapter {
         return null;
     }
 
+    /**
+     * Init the PagerAdapter.
+     * SettingsSubView & HistorySubView are Created.
+     * @param viewPager
+     */
     private void init(ViewPager viewPager) {
         this.allSubGardians.add(new SettingsSubView(context, "Settings", R.layout.guardian_settings, viewPager));
         this.allSubGardians.add(new HistorySubView(context, "History", R.layout.guardian_history));
     }
 
+    /**
+     * instantiateItem call "instantiate" method of the selected object. This object extends GuardianSubView.
+     * @param collection
+     * @param position
+     * @return
+     */
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
         Logger.d(TAG, "instantiateItem");

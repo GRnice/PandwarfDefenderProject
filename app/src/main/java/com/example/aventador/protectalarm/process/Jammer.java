@@ -59,6 +59,10 @@ public class Jammer {
         jobManager.addJobCreator(jobCreator);
     }
 
+    public boolean isRunning() {
+        return this.jammingIsRunning.get();
+    }
+
     private Jammer() {
         isInit = false;
         // At the creation of jobCreator, we defined a Job to stop jamming.
@@ -88,7 +92,9 @@ public class Jammer {
     }
 
     /**
-     *
+     * Start jamming
+     * - cbStartJamming called when jamming is started or not. (true or false)
+     * - cbJammingDone called when jamming is terminated.
      * @param frequency
      * @param cbStartJamming
      * @param cbJammingDone
@@ -96,8 +102,9 @@ public class Jammer {
      */
     public void startJamming(int frequency, final GollumCallbackGetBoolean cbStartJamming, GollumCallbackGetBoolean cbJammingDone) {
         Logger.d(TAG, "startJamming()");
-        if (!Pandwarf.getInstance().isAvailableForNewStart(activity) || !jammingIsRunning.compareAndSet(false, true)) {
+        if (!Pandwarf.getInstance().isAvailable(activity) || !jammingIsRunning.compareAndSet(false, true)) {
             cbStartJamming.done(false);
+            return;
         }
         this.cbJammingDone = cbJammingDone;
         Logger.d(TAG, "jamming can be started");
@@ -125,27 +132,30 @@ public class Jammer {
 
     /**
      * Stop jamming, cancel all jobs scheduled.
+     * if stopJamming , cbJammingDone is called , this callback restart the specan.
+     * Otherwise stopJamming is called by user (or if Bluetooth is disable), this action kill the protection routine.
      * @param stopByUser
      * @param cbStopDone
      */
-    public void stopJamming(boolean stopByUser, final GollumCallbackGetBoolean cbStopDone) {
+    public void stopJamming(final boolean stopByUser, final GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stopJamming()");
         if (!jammingIsRunning.compareAndSet(true, false)) {
             cbStopDone.done(false);
             return;
         }
         jobManager.cancelAll(); // kill all jobs scheduled.
-        /*
-        If stopJamming is called by a Job, stopByUser will be False
-        Otherwise True
-         */
-        if (cbJammingDone != null && !stopByUser) {
-            cbJammingDone.done(true); // this action restart the specan /!\
-            cbJammingDone = null;
-        }
+
         GollumDongle.getInstance(activity).rfJammingStop(0, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
+                /*
+                If stopJamming is called by a Job, stopByUser will be False
+                Otherwise True
+                */
+                if (cbJammingDone != null && !stopByUser) {
+                    cbJammingDone.done(true); // this action restart the specan /!\
+                    cbJammingDone = null;
+                }
                 // call cbStopDone when jamming is stopped.
                 cbStopDone.done(true);
                 Logger.d(TAG, "jamming stopped");

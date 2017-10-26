@@ -31,6 +31,10 @@ import static com.example.aventador.protectalarm.tools.Tools.isValidAddressMac;
 /**
  * A placeholder fragment containing a simple view.
  */
+
+/**
+ * HomeFragment allows the user to select the pandwarf mac address to connect
+ */
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
@@ -64,10 +68,12 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable editable) {
+                // if mac address is valid. address becomes green
                 if (isValidAddressMac(addressMacEditText.getText().toString())) {
                     connectionButton.setVisibility(View.VISIBLE);
                     addressMacEditText.setTextColor(Color.GREEN);
                 } else {
+                    // if mac address is NOT valid. address becomes red
                     connectionButton.setVisibility(View.INVISIBLE);
                     addressMacEditText.setTextColor(Color.RED);
                 }
@@ -94,6 +100,11 @@ public class HomeFragment extends Fragment {
         EventBus.getDefault().unregister(this);
     }
 
+    /**
+     * startScan
+     * - check if bluetooth is on.
+     * - send an action event "CONNECT" to the main activity with the selected ble address.
+     */
     private void startScan() {
         if (BluetoothAdapter.getDefaultAdapter().getState() != BluetoothAdapter.STATE_ON) {
             Toast toast = Toast.makeText(getContext(), "Bluetooth must be started", Toast.LENGTH_SHORT);
@@ -101,7 +112,6 @@ public class HomeFragment extends Fragment {
             toast.show();
             return;
         }
-        EventBus.getDefault().postSticky(new ActionEvent(Action.CONNECT, addressMacEditText.getText().toString()));
         scanProgressbar.setVisibility(View.VISIBLE);
         connectionButton.setText("STOP CONNECTION");
         connectionButton.setOnClickListener(new View.OnClickListener() {
@@ -110,13 +120,21 @@ public class HomeFragment extends Fragment {
                 stopScan();
             }
         });
+        EventBus.getDefault().postSticky(new ActionEvent(Action.CONNECT, addressMacEditText.getText().toString()));
     }
 
+    /**
+     * Reset the progress bar and connectionButton.
+     * Send an action event "STOP_CONNECT" to the main activity with the selected ble address.
+     */
     private void stopScan() {
         resetFragment();
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_CONNECT, ""));
     }
 
+    /**
+     * Reset the progress bar and connectionButton.
+     */
     public void resetFragment() {
         connectionButton.setVisibility(View.INVISIBLE);
         connectionButton.setText("connection");

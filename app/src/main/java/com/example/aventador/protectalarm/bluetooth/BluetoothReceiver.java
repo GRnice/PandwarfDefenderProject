@@ -16,10 +16,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by Aventador on 29/09/2017.
  */
 
+/**
+ * BluetoothReceiver is able to register/unregister the app to the bluetooth events.
+ *
+ * When an event is catched thanks to the BroadcastReceiver @see: mReceiver
+ * the callback "cbNewState" is called with the state of the bluetooth event.
+ * this callback is given by the main activity.
+ */
 public class BluetoothReceiver {
     private static BluetoothReceiver instance;
-    private AtomicBoolean register;
-    private GollumCallbackGetInteger cbNewState;
+    private AtomicBoolean register; // manages multi-threading.
+    private GollumCallbackGetInteger cbNewState; // callback given by main activity.
+
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
         @Override
@@ -28,7 +36,7 @@ public class BluetoothReceiver {
 
             if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) && cbNewState != null) {
                 int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
-                cbNewState.done(state);
+                cbNewState.done(state); // the main activity will be notified.
             }
         }
     };
@@ -46,13 +54,14 @@ public class BluetoothReceiver {
     }
 
     /**
-     *
+     * Register the app to the bluetooth events.
+     * If the register is already done -> return false.
      * @param context
      * @param cbNewState
      * @return
      */
     public boolean register(@NonNull Context context, @Nullable GollumCallbackGetInteger cbNewState) {
-        if (register.compareAndSet(false, true)) {
+        if (register.compareAndSet(false, true)) { // set register to true, if the current value is false.
             if (cbNewState != null) {
                 this.cbNewState = cbNewState;
             }
@@ -64,12 +73,14 @@ public class BluetoothReceiver {
     }
 
     /**
+     * Unregister the app to the bluetooth events.
+     * If the unregister is already done -> return false.
      *
      * @param context
      * @return
      */
     public boolean unregister(@NonNull Context context) {
-        if (register.compareAndSet(true, false)) {
+        if (register.compareAndSet(true, false)) { // set register to false, if the current value is true.
             context.unregisterReceiver(mReceiver);
             return true;
         }

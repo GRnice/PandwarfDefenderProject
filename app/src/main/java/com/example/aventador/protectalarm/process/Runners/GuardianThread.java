@@ -77,7 +77,7 @@ public class GuardianThread extends Runner {
                     Log.e(TAG, "rssi_buffer always empty !");
                     continue;
                 } else {
-                    means = sum / nbChannels;
+                    means = sum / nbRssiReceived;
                     Log.d(TAG, "means is: " + means);
                 }
 

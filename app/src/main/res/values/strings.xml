@@ -6,4 +6,13 @@
 
     <string name="root_dir">PandwarfDefender</string>
     <string name="config_dir">configs</string>
+
+    <!-- Guardian fragment -->
+    <string name="dialog_title_config_save">Save config</string>
+    <string name="dialog_content_config_save">Set file name please</string>
+    <string name="stop_protection_text_button">Stop protection</string>
+    <string name="start_protection_text_button">Start protection</string>
+    <!-- -->
+
+
 </resources>

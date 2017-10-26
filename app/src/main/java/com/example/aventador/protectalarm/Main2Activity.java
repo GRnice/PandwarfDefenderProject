@@ -297,21 +297,26 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     }
 
     private void startJamming(final String frequency, final String dbTolerance, final int peakTolerance, final int marginError) {
+        Logger.d(TAG, "startJamming");
         Pandwarf.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
-
+                waiting(1000);
                 Jammer.getInstance().startJamming(Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean startSuccess) {
                         if (startSuccess) {
                             toastShow("Jamming started");
+                        } else {
+                            toastShow("Can't start jamming");
+                            startGuardian(frequency, dbTolerance, peakTolerance, marginError);
                         }
                     }
                 }, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
+                        waiting(1000);
                         Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
                         startGuardian(frequency, dbTolerance, peakTolerance, marginError);
                     }
@@ -352,9 +357,11 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                     @Override
                     public void done(boolean startSuccess) {
                         if (!startSuccess) {
+                            Logger.e(TAG, "guardian not started");
                             toastShow("Fail to start protection");
                             EventBus.getDefault().postSticky(new StateEvent(PROTECTION_FAIL, ""));
                         } else {
+                            Logger.d(TAG, "guardian started");
                             String message = "protection started\n frequency: " + frequency +
                                     "\n db tolerance: " + dbTolerance +
                                     "\n peak tolerance: " + peakTolerance +
@@ -398,6 +405,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             }
             case DISCONNECTED: {
                 toastShow("Closing device...");
+                Pandwarf.getInstance().setConnected(false);
                 break;
             }
         }

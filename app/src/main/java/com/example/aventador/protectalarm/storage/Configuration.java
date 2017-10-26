@@ -8,6 +8,19 @@ import com.google.gson.annotations.Since;
  * Created by Aventador on 11/10/2017.
  */
 
+/**
+ * Configuration contains 4 values.
+ *
+ * - frequency
+ * - dbTolerance
+ * - peakTolerance
+ * - margin error
+ *
+ * This class may be serialized/deserialized thanks to the GSON library.
+ *
+ * thereby, anytime user can store/load differents configurations
+ *
+ */
 public class Configuration {
     @Expose
     @SerializedName("db_tolerance")

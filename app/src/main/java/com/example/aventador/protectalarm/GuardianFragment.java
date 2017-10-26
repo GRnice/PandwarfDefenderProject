@@ -79,7 +79,7 @@ public class GuardianFragment extends Fragment {
         // Inflate the layout for this fragment
         View bodyView = inflater.inflate(R.layout.fragment_guardian, container, false);
         // -------------------- //
-        currentConfiguration = new Configuration();
+        currentConfiguration = new Configuration(); // contains values of frequency, dbTolerance, peak tolerance & margin error.
         frequencyTextView = (TextView) bodyView.findViewById(R.id.frequency_guardian_textview);
         frequencyEditText = (EditText) bodyView.findViewById(R.id.frequency_guardian_edittext);
         dbToleranceTextView = (TextView) bodyView.findViewById(R.id.db_tolerance_guardian_textview);
@@ -91,20 +91,22 @@ public class GuardianFragment extends Fragment {
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startProtection();
+                startProtection(); // when user click on this button , the protection is started.
 
             }
         });
-        startStopProtectionButton.setEnabled(false);
-        viewPager = (ViewPager) bodyView.findViewById(R.id.guardian_view_pager);
+        startStopProtectionButton.setEnabled(false); // will be true when user connect the App to a PandwaRF.
+        viewPager = (ViewPager) bodyView.findViewById(R.id.guardian_view_pager); // view pager store two layout (Settings layout & History layout)
         CustomPagerAdapter customPagerAdapter = new CustomPagerAdapter(this.getContext(), viewPager);
         customPagerAdapter.getSettingsSubView().setOnLoadConfig(new GollumCallbackGetBoolean() {
+            // When user want to load a session.
             @Override
             public void done(boolean b) {
                 FileManager.getInstance().load(getContext(), new GollumCallbackGetGeneric<Configuration>() {
                     @Override
                     public void done(Configuration configuration, GollumException e) {
                         if (configuration != null) {
+                            // if the loaded config is not null, a message is showed and the loaded config is setted on the fragment
                             Toast toast = Toast.makeText(getContext(), "config loaded : " + configuration.getTitle(), Toast.LENGTH_SHORT);
                             toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                             toast.show();
@@ -116,25 +118,27 @@ public class GuardianFragment extends Fragment {
         });
 
         customPagerAdapter.getSettingsSubView().setOnSaveConfig(new GollumCallbackGetBoolean() {
+            // When user want to store a session.
             @Override
             public void done(boolean b) {
-                refreshCurrentConfiguration();
+                refreshCurrentConfiguration(); // force refresh of the object currentConfiguration.
                 new MaterialDialog.Builder(getContext())
-                        .title("Save config")
-                        .content("Set file name please")
+                        .title(R.string.dialog_title_config_save)
+                        .content(R.string.dialog_content_config_save)
                         .inputType(InputType.TYPE_CLASS_TEXT)
                         .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            // When user click on "Ok"  or something similar like "Yes"...
                             @Override
                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                String fileName = dialog.getInputEditText().getText().toString();
+                                String fileName = dialog.getInputEditText().getText().toString(); // get the entered name --> it's the configuration title
                                 currentConfiguration.setTitle(fileName);
-                                FileManager.getInstance().save(getContext(), fileName, currentConfiguration);
+                                FileManager.getInstance().save(getContext(), fileName, currentConfiguration); // store the config.
                             }
                         })
                         .input("file name", "", new MaterialDialog.InputCallback() {
                             @Override
                             public void onInput(MaterialDialog dialog, CharSequence input) {
-
+                                // nothing...
                             }
                         }).show();
             }
@@ -145,14 +149,21 @@ public class GuardianFragment extends Fragment {
         return bodyView;
     }
 
+    /**
+     * Set all widgets from the given Configuration values, this Configuration was loaded.
+     * @param configuration
+     */
     private void setCurrentConfiguration(Configuration configuration) {
-        this.frequencyEditText.setText("" + configuration.getFrequency());
-        this.dbToleranceEditText.setText("" + configuration.getDbTolerance());
+        this.frequencyEditText.setText(String.valueOf(configuration.getFrequency()));
+        this.dbToleranceEditText.setText(String.valueOf(configuration.getDbTolerance()));
         CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
         customPagerAdapter.getSettingsSubView().setPeakTolerance(configuration.getPeakTolerance());
         customPagerAdapter.getSettingsSubView().setMarginError(configuration.getMarginError());
     }
 
+    /**
+     * Set the widgets values (freq, db, peak tolerance, margin error) into the currentConfiguration object
+     */
     private void refreshCurrentConfiguration() {
         if (Tools.isValidFrequency(frequencyEditText.getText().toString())) {
             currentConfiguration.setFrequency(Integer.valueOf(frequencyEditText.getText().toString()));
@@ -166,6 +177,12 @@ public class GuardianFragment extends Fragment {
         currentConfiguration.setMarginError(customPagerAdapter.getSettingsSubView().getMarginError());
     }
 
+    /**
+     * Start protection, check if frequency && decibel values are regular.
+     * If not a toast will be showed.
+     *
+     * Otherwise an event "START_PROTECTION" will be sent to the main activity.
+     */
     private void startProtection() {
         if (!Tools.isValidDb(dbToleranceEditText.getText().toString()) ||
                 !Tools.isValidFrequency(frequencyEditText.getText().toString())) {
@@ -174,43 +191,67 @@ public class GuardianFragment extends Fragment {
             toast.show();
             return;
         }
-        startStopProtectionButton.setBackgroundColor(0xFFD9534F); // warning color
-        startStopProtectionButton.setText("Stop protection");
-        HashMap<String, String> parameters = new HashMap<>();
+        refreshCurrentConfiguration();
+        startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.warningColor)); // warning color
+        startStopProtectionButton.setText(R.string.stop_protection_text_button); // change text value
+        HashMap<String, String> parameters = new HashMap<>(); // parameters will contains the frequency, db, peak tolerance & margin error values.
 
-        parameters.put(Parameter.FREQUENCY.toString(), frequencyEditText.getText().toString());
-        parameters.put(Parameter.RSSI_VALUE.toString(), dbToleranceEditText.getText().toString());
-        parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(getPeakTolerance()));
-        parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(getMargingError()));
-        EventBus.getDefault().postSticky(new ActionEvent(Action.START_PROTECTION, parameters));
+        parameters.put(Parameter.FREQUENCY.toString(), String.valueOf(currentConfiguration.getFrequency()));
+        parameters.put(Parameter.RSSI_VALUE.toString(), String.valueOf(currentConfiguration.getDbTolerance()));
+        parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(currentConfiguration.getPeakTolerance()));
+        parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(currentConfiguration.getMarginError()));
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopProtection();
+                stopProtection(); // button's behavior changed. now if user click on it, the protection will be stopped.
             }
         });
+        EventBus.getDefault().postSticky(new ActionEvent(Action.START_PROTECTION, parameters));
+        addLog(HistoryLog.WARNING_LEVEL.LOW, "Protection started");
+
     }
 
+    /**
+     * Returns value of the "peak tolerance" seekbar
+     * @return
+     */
     private int getPeakTolerance() {
         CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
         SettingsSubView settingsSubView = customPagerAdapter.getSettingsSubView();
         return settingsSubView.getPeakTolerance();
     }
 
+    private void addLog(HistoryLog.WARNING_LEVEL level, String message) {
+        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
+        HistoryLog historyLog = new HistoryLog(level, Tools.getCurrentTime(), message);
+        customPagerAdapter.getHistorySubView().addLog(historyLog);
+    }
+
+    /**
+     * Returns value of the "margin error" seekbar
+     * @return
+     */
     private int getMargingError() {
         CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
         SettingsSubView settingsSubView = customPagerAdapter.getSettingsSubView();
         return settingsSubView.getMarginError();
     }
 
+    /**
+     * Reset the fragment and send "STOP_PROTECTION" event to the mainActivity.
+     */
     private void stopProtection() {
         resetFragment();
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
     }
 
+    /**
+     * Reset color, text, and OnClick callback of startStopProtectionButton button
+     *
+     */
     private void resetFragment() {
-        startStopProtectionButton.setBackgroundColor(0xFF5CB85C); // success color
-        startStopProtectionButton.setText("Start protection");
+        startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.successColor)); // success color
+        startStopProtectionButton.setText(R.string.start_protection_text_button);
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -219,6 +260,10 @@ public class GuardianFragment extends Fragment {
         });
     }
 
+    /**
+     * Indicate if the sub view showed is the history page.
+     * @return
+     */
     private boolean historyViewIsShow() {
         return viewPager.getCurrentItem() == HISTORY_PAGE; // PAGE 1 is the historic view
     }
@@ -284,10 +329,7 @@ public class GuardianFragment extends Fragment {
              */
             case ATTACK_DETECTED: {
                 Logger.d(TAG, "event: ATTACK_DETECTED");
-                String dateAttack = stateEvent.getParameter(Parameter.DATE);
-                CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-                HistoryLog historyLog = new HistoryLog(HistoryLog.WARNING_LEVEL.HIGH, dateAttack);
-                customPagerAdapter.getHistorySubView().addLog(historyLog);
+                addLog(HistoryLog.WARNING_LEVEL.HIGH, "Attack detected");
                 if (!historyViewIsShow()) {
                     viewPager.setCurrentItem(HISTORY_PAGE);
                 }

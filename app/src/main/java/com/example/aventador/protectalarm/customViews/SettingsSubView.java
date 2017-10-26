@@ -24,19 +24,30 @@ import com.example.aventador.protectalarm.storage.FileManager;
  * Created by Aventador on 03/10/2017.
  */
 
+/**
+ * SettingsSubView is responsible for displaying two seekbar (peak tolerance, margin error)
+ * and two buttons in charge of load and store different Configurations {@link Configuration}
+ * SettingsSubView is the controller of the settings sub view. It extend GuardianSubView
+ */
 public class SettingsSubView extends GuardianSubView {
-    private TextView toleranceTextView;
-    private int tolerance = 50;
+
+    private int tolerance = 50; // default value
+    private int marginError = 10; // default value
+
+    /**
+     * cbLoadCalled is called when user press load button.
+     * cbSaveCalled is called when user press save button.
+     */
     private GollumCallbackGetBoolean cbLoadCalled, cbSaveCalled;
 
+    private TextView toleranceTextView;
     private TextView marginErrorTextView;
-
     private BootstrapButton saveButton;
     private BootstrapButton loadButton;
     private SeekBar seekBarTolerance;
     private SeekBar seekBarMarginError;
 
-    private int marginError = 10;
+
 
     private ViewPager viewPager;
     private Context context;
@@ -55,6 +66,12 @@ public class SettingsSubView extends GuardianSubView {
         return marginError;
     }
 
+    /**
+     * Like onCreateView, this method inflate the view and gets all widgets.
+     * @param inflater
+     * @param viewGroup
+     * @return
+     */
     @Override
     public View instantiate(LayoutInflater inflater, ViewGroup viewGroup) {
         layout = inflater.inflate(getLayoutResId(), viewGroup, false);
@@ -111,24 +128,35 @@ public class SettingsSubView extends GuardianSubView {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.switch_page_image_view: {
+                // if switch button is pressed -> go to history sub view.
                 this.viewPager.setCurrentItem(this.viewPager.getCurrentItem() + 1);
                 break;
             }
             case R.id.save_config_button: {
-                cbSaveCalled.done(true);
+                cbSaveCalled.done(true); // main activity will be notified
                 break;
             }
             case R.id.load_config_button: {
-                cbLoadCalled.done(true);
+                cbLoadCalled.done(true); // main activity will be notified
                 break;
             }
         }
     }
 
+    /**
+     * Called by main activity
+     * cbSaveCalled  is called when user press load button
+     * @param cbDone
+     */
     public void setOnLoadConfig(GollumCallbackGetBoolean cbDone) {
         this.cbLoadCalled = cbDone;
     }
 
+    /**
+     * Called by main activity
+     * cbSaveCalled  is called when user press save button
+     * @param cbDone
+     */
     public void setOnSaveConfig(GollumCallbackGetBoolean cbDone) {
         this.cbSaveCalled = cbDone;
     }

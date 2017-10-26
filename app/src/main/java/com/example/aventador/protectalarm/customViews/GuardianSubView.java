@@ -12,6 +12,13 @@ import com.example.aventador.protectalarm.R;
 /**
  * Created by Aventador on 02/10/2017.
  */
+
+/**
+ * All subviews of Guardian fragment must extends this class
+ *
+ * sub views are instanciated by calling "instantiate(LayoutInflater inflater, ViewGroup viewGroup)"
+ * instantiate is like an onCreateView...
+ */
 public abstract class GuardianSubView implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
     private int layoutResId;
     private String title;
