@@ -70,6 +70,8 @@ public class DiscoverThread extends Runner {
         for (Integer means : allMeans) {
             meansOfAllSequences += means;
         }
-        cbDone.done(meansOfAllSequences / allMeans.size());
+        int meanFinal = meansOfAllSequences / allMeans.size();
+        Logger.d(TAG, "meanFinal is : " + meanFinal);
+        cbDone.done(meanFinal);
     }
 }

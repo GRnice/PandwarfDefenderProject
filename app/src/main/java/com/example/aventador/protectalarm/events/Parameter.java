@@ -9,5 +9,6 @@ public enum Parameter {
     RSSI_VALUE,
     PEAK_TOLERANCE,
     MARGIN_ERROR,
+    CONFIGURATION,
     DATE;
 }

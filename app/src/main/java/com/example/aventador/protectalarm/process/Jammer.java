@@ -15,8 +15,11 @@ import com.evernote.android.job.JobCreator;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
 import com.example.aventador.protectalarm.tools.Logger;
+import com.example.aventador.protectalarm.tools.Recaller;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.example.aventador.protectalarm.tools.Recaller.JAMMER_JOB_TAG;
 
 /**
  * Jammer is dedicated to apply a jamming.
@@ -31,9 +34,6 @@ public class Jammer {
     private boolean isInit;
     private Activity activity;
     private AtomicBoolean jammingIsRunning; // indicate if jamming is on run.
-
-    private JobManager jobManager; // used to create a Job to stop the jamming after a certain delay
-    private JobCreator jobCreator; // used to create a Job to stop the jamming after a certain delay
 
     private GollumCallbackGetBoolean cbJammingDone; // called when the jamming is done.
 
@@ -55,8 +55,6 @@ public class Jammer {
         }
         isInit = true;
         this.activity = activity;
-        jobManager = JobManager.create(activity);
-        jobManager.addJobCreator(jobCreator);
     }
 
     public boolean isRunning() {
@@ -68,27 +66,6 @@ public class Jammer {
         // At the creation of jobCreator, we defined a Job to stop jamming.
         // This job is called after a certain delay.
         jammingIsRunning = new AtomicBoolean(false);
-
-        jobCreator = new JobCreator() {
-            @Override
-            public Job create(String tag) {
-                // Job to stop jamming is also defined
-                return new Job() {
-                    @NonNull
-                    @Override
-                    protected Result onRunJob(Params params) {
-                        // stop jamming.
-                        stopJamming(false, new GollumCallbackGetBoolean() {
-                            @Override
-                            public void done(boolean b) {
-
-                            }
-                        });
-                        return Result.SUCCESS;
-                    }
-                };
-            }
-        };
     }
 
     /**
@@ -123,11 +100,18 @@ public class Jammer {
      */
     private void prepareJob() {
         Logger.d(TAG, "scheduleEndingJob()");
-        new JobRequest.Builder(JOB_TAG)
-                .setExact(DELAY) // jamming duration fixed at 10 seconds.
-                .setPersisted(true)
-                .build()
-                .schedule();
+        Recaller.getInstance().recallMe(JAMMER_JOB_TAG, 10_000L, new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean b) {
+                // stop jamming.
+                stopJamming(false, new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean b) {
+
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -143,7 +127,7 @@ public class Jammer {
             cbStopDone.done(false);
             return;
         }
-        jobManager.cancelAll(); // kill all jobs scheduled.
+        Recaller.getInstance().cancel(JAMMER_JOB_TAG);
 
         GollumDongle.getInstance(activity).rfJammingStop(0, new GollumCallbackGetInteger() {
             @Override

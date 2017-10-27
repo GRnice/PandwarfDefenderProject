@@ -5,8 +5,10 @@ import android.app.Activity;
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
+import com.example.aventador.protectalarm.callbacks.GollumCallbackGetConfiguration;
 import com.example.aventador.protectalarm.process.Runners.DiscoverThread;
 import com.example.aventador.protectalarm.process.Runners.GuardianThread;
+import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.tools.Logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,23 +32,32 @@ public class Pandwarf {
     private static int DELAY_PACKETS_RSSI_MS = 100;
     private static int FREQUENCY_BY_CHANNELS = 25000;
     private static int NB_CHANNELS = 5; // 5 by default.
-    private static int NB_SCAN_BY_SEQUENCE = 4; // interval -> [1 , MAX_INT] one sequence -> 20 scan for each sequence.
+    private static int NB_SCAN_BY_SEQUENCE = 4; // interval -> [1 , MAX_INT] , in this case : 4 scan for each sequence.
 
     /*
     For Guardian mode
      */
-    private static int GUARDIAN_NB_SEQUENCES = 40; // one sequence -> 20 scans.
+    private static int GUARDIAN_NB_SEQUENCES = 25; // 20 sequences, one sequence -> 4 scans.
 
     /*
     For discovery mode
      */
     private static int DISCOVERY_NB_SEQUENCES = 8; // 8 sequences of scan will be executed
 
+    /*
+    For fast protection analyzer
+     */
+    private static int FAST_PROTECTION_ANALYZER_NB_SEQUENCES = GUARDIAN_NB_SEQUENCES;
+
     private static Pandwarf instance;
     private boolean isConnected;
     private AtomicBoolean guardianIsRunning;
     private AtomicBoolean discoverIsRunning;
+    private AtomicBoolean fastProtectionAnalyseIsRunning;
+
     private AtomicBoolean specanIsRunning;
+
+    private FastProtectionAnalyser fastProtectionAnalyser;
     private GuardianThread guardianThread;
     private DiscoverThread discoverThread;
     private static final String TAG = "Pandwarf";
@@ -70,6 +81,7 @@ public class Pandwarf {
         }
         guardianIsRunning = new AtomicBoolean(false);
         discoverIsRunning = new AtomicBoolean(false);
+        fastProtectionAnalyseIsRunning = new AtomicBoolean(false);
         specanIsRunning = new AtomicBoolean(false);
         isConnected = false;
         return true;
@@ -96,7 +108,7 @@ public class Pandwarf {
 
         if (!isAvailable(activity) || !guardianIsRunning.compareAndSet(false, true)) {
             // if PandwaRF is not isAvailable for a new task  or  if the guardian is already on run.
-            Logger.e(TAG, "startGuardian: guardian not ready");
+            Logger.e(TAG, "startGuardian: pandwarf not ready");
             cbStartGuardianDone.done(false);
             return;
         }
@@ -107,7 +119,7 @@ public class Pandwarf {
                 Logger.d(TAG, "startGuardian: success ? " + startSuccess);
                 if (startSuccess) {
                     guardianThread = new GuardianThread(activity, GUARDIAN_NB_SEQUENCES, NB_SCAN_BY_SEQUENCE, NB_CHANNELS, dbTolerance, peakTolerance, marginError, cbAttackDetected);
-                    guardianThread.start();
+                    guardianThread.start(true);
                 } else {
                     Logger.e(TAG, "startGuardian: specan not started");
                 }
@@ -133,6 +145,7 @@ public class Pandwarf {
                 " specan run:" + specanIsRunning);
 
         if (!isAvailable(activity) || !discoverIsRunning.compareAndSet(false, true)) {
+            Logger.e(TAG, "startDiscovery: pandwarf not ready");
             cbStartDiscoveryDone.done(false);
             return;
         }
@@ -151,6 +164,50 @@ public class Pandwarf {
 
             }
         });
+    }
+
+    /**
+     *
+     * @param activity
+     * @param frequency
+     * @param cbFastProtectionAnalyzerStarted
+     * @param cbFastProtectionAnalyseDone
+     */
+    public void startFastProtectionAnalyser(final Activity activity, final int frequency,
+                                            final GollumCallbackGetBoolean cbFastProtectionAnalyzerStarted, final GollumCallbackGetConfiguration cbFastProtectionAnalyseDone) {
+        if (!isAvailable(activity) || !fastProtectionAnalyseIsRunning.compareAndSet(false, true)) {
+            Logger.e(TAG, "startFastProtectionAnalyser: pandwarf not ready");
+            cbFastProtectionAnalyzerStarted.done(false);
+            return;
+        }
+
+        Logger.d(TAG, "start fast protection analyser");
+        startSpecan(activity, frequency, new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean specanStartSuccess) {
+                if (specanStartSuccess) {
+                    fastProtectionAnalyser = new FastProtectionAnalyser(activity, frequency,
+                            NB_SCAN_BY_SEQUENCE, FAST_PROTECTION_ANALYZER_NB_SEQUENCES, NB_CHANNELS, new GollumCallbackGetConfiguration() {
+                        @Override
+                        public void done(final boolean success, final Configuration configuration) {
+                            cbFastProtectionAnalyseDone.done(success, configuration);
+                            stopSpecan(activity, new GollumCallbackGetBoolean() {
+                                @Override
+                                public void done(boolean b) {
+
+                                }
+                            });
+                        }
+                    });
+                    fastProtectionAnalyser.start();
+                } else {
+                    fastProtectionAnalyseIsRunning.set(false);
+                }
+                cbFastProtectionAnalyzerStarted.done(specanStartSuccess);
+            }
+        });
+
+
     }
 
     /**
@@ -179,7 +236,7 @@ public class Pandwarf {
      *
      * @param activity
      */
-    private void stopSpecan(final Activity activity,final  GollumCallbackGetBoolean cbStopDone) {
+    private void stopSpecan(final Activity activity, final GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stop specan");
         GollumDongle.getInstance(activity).rfSpecanStop(0, new GollumCallbackGetInteger() {
             @Override
@@ -238,6 +295,16 @@ public class Pandwarf {
 
     }
 
+    public void stopFastProtectionAnalyzer(final Activity activity, GollumCallbackGetBoolean cbStopDone) {
+        Logger.d(TAG, "stopFastProtectionAnalyzer()");
+        Logger.d(TAG, "protection analyzer is running ? : " + fastProtectionAnalyseIsRunning.get());
+        if (! fastProtectionAnalyseIsRunning.compareAndSet(true, false)) {
+            Logger.e(TAG, "stopFastProtectionAnalyzer: analyzer already stopped");
+        }
+
+        stopSpecan(activity, cbStopDone);
+    }
+
     /**
      * Indicate if the dongle has stopped specan
      * @return
@@ -268,7 +335,8 @@ public class Pandwarf {
      */
     public boolean isAvailable(Activity activity) {
         return (isConnected && GollumDongle.getInstance(activity).isDeviceConnected() &&
-                !specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning() && !Jammer.getInstance().isRunning());
+                !specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning() && !Jammer.getInstance().isRunning() &&
+                !fastProtectionAnalyseIsRunning.get());
     }
 
     public boolean isConnected() {
@@ -287,5 +355,4 @@ public class Pandwarf {
     public void close(Activity activity) {
         GollumDongle.getInstance(activity).closeDevice();
     }
-
 }

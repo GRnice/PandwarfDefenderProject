@@ -29,6 +29,7 @@ import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
 import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
+import com.example.aventador.protectalarm.callbacks.GollumCallbackGetConfiguration;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
@@ -37,8 +38,11 @@ import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.process.Jammer;
 import com.example.aventador.protectalarm.process.Pandwarf;
 import com.example.aventador.protectalarm.process.Scanner;
+import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.tools.Logger;
+import com.example.aventador.protectalarm.tools.Recaller;
 import com.example.aventador.protectalarm.tools.Tools;
+import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -116,9 +120,9 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 newStateDetected(state);
             }
         });
-        Jammer.getInstance().init(this);
+        Jammer.getInstance().init(this); // init Jammer
         EventBus.getDefault().register(this);
-        Recaller.getInstance(this);
+        Recaller.getInstance(this); // init Recaller
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
                             android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -287,7 +291,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         GollumDongle.getInstance(Main2Activity.this);
                         Log.d(TAG, "Pandwarf stopped");
                         toastShow("protection stopped");
-
                     }
                 });
 
@@ -372,7 +375,13 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                     toastShow("Rapid protection analyzer has no result");
                     EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_FAIL, ""));
                 } else {
-                    toastShow("Rapid Protection analyzer found the right parameters");
+                    Main2Activity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            toastShow("Rapid Protection analyzer found the right parameters");
+                        }
+                    });
+
                     HashMap<String, String> parameters = new HashMap<>();
                     parameters.put(Parameter.CONFIGURATION.toString(), new Gson().toJson(configuration));
                     EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_DONE, parameters));
