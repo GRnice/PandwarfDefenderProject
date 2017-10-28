@@ -167,27 +167,33 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     }
 
     /**
-     * Kill all process, scan, threshold discovery, protection, jamming
+     * Kill all process, scan, threshold discovery, protection, jamming, fast protection analyzer
      */
     public void killAllProcess(final GollumCallbackGetBoolean killDone) {
         Scanner.getInstance().stopConnect(this);
-        Pandwarf.getInstance().stopDiscovery(this, new GollumCallbackGetBoolean() {
+        Pandwarf.getInstance().stopFastProtectionAnalyzer(this, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
-                Pandwarf.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
+                Pandwarf.getInstance().stopDiscovery(Main2Activity.this, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
-                        Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
+                        Pandwarf.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
                             @Override
                             public void done(boolean b) {
-                                killDone.done(true);
-                                Pandwarf.getInstance().close(Main2Activity.this);
+                                Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
+                                    @Override
+                                    public void done(boolean b) {
+                                        killDone.done(true);
+                                        Pandwarf.getInstance().close(Main2Activity.this);
+                                    }
+                                });
                             }
                         });
                     }
                 });
             }
         });
+
     }
 
     @Override
@@ -245,6 +251,21 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
             }
 
+            case STOP_FAST_PROTECTION_ANALYZER: {
+                stopFastProtectionAnalyzer(new GollumCallbackGetBoolean() {
+                    @Override
+                    public void done(boolean stopSuccess) {
+                        if (!stopSuccess) {
+                            Logger.e(TAG, "impossible to stop fast protection, nota: check if specan is stopped");
+                            toastShow("Fast Protection can't be stopped");
+                        } else {
+                            toastShow("Fast Protection is stopped");
+                        }
+
+                    }
+                });
+            }
+
             case START_SEARCH_THRESHOLD: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 startThresholdSearch(frequency);
@@ -279,6 +300,10 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 startJamming(frequency, dbTolerance, peakTolerance, marginError);
             }
         }
+    }
+
+    private void stopFastProtectionAnalyzer(GollumCallbackGetBoolean cbStopDone) {
+        Pandwarf.getInstance().stopFastProtectionAnalyzer(this, cbStopDone);
     }
 
     private void stopGuardian() {

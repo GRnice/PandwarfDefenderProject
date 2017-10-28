@@ -193,7 +193,12 @@ public class Pandwarf {
                             cbFastProtectionAnalyseDone.done(success, configuration);
                             stopSpecan(activity, new GollumCallbackGetBoolean() {
                                 @Override
-                                public void done(boolean b) {
+                                public void done(boolean successStop) {
+                                    if (successStop) {
+                                        Logger.d(TAG, "startFastProtectionAnalyser: specan is stopped");
+                                    } else {
+                                        Logger.e(TAG, "startFastProtectionAnalyser: specan isn't stopped");
+                                    }
 
                                 }
                             });
@@ -262,7 +267,7 @@ public class Pandwarf {
         Logger.d(TAG, "discoveryIsRunning ? : " + discoverIsRunning.get());
         if (!discoverIsRunning.compareAndSet(true, false)) {
             Logger.e(TAG, "stopDiscovery: already stopped");
-            cbStopDone.done(false);
+            cbStopDone.done(true);
         }
         if (discoverThread != null) {
             discoverThread.kill();
@@ -282,7 +287,7 @@ public class Pandwarf {
         Logger.d(TAG, "guardianIsRunning ? : " + guardianIsRunning.get());
         if (!guardianIsRunning.compareAndSet(true, false)) {
             Logger.e(TAG, "stopGuardian: guardian already stopped");
-            cbStopDone.done(false);
+            cbStopDone.done(true);
             return;
         }
         if (guardianThread != null) {
@@ -295,14 +300,23 @@ public class Pandwarf {
 
     }
 
-    public void stopFastProtectionAnalyzer(final Activity activity, GollumCallbackGetBoolean cbStopDone) {
+    public void stopFastProtectionAnalyzer(final Activity activity, final GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stopFastProtectionAnalyzer()");
         Logger.d(TAG, "protection analyzer is running ? : " + fastProtectionAnalyseIsRunning.get());
         if (! fastProtectionAnalyseIsRunning.compareAndSet(true, false)) {
             Logger.e(TAG, "stopFastProtectionAnalyzer: analyzer already stopped");
+            cbStopDone.done(true); // true because fastProtectionAnalyzer is stopped.
         }
 
-        stopSpecan(activity, cbStopDone);
+        fastProtectionAnalyser.stop(new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean b) {
+                Logger.d(TAG, "fast protection routine is breaked");
+                Logger.d(TAG, "now stopSpecan will be called");
+                stopSpecan(activity, cbStopDone);
+            }
+        });
+
     }
 
     /**
