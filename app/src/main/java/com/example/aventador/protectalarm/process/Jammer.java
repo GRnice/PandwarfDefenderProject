@@ -5,15 +5,10 @@ package com.example.aventador.protectalarm.process;
  */
 
 import android.app.Activity;
-import android.support.annotation.NonNull;
 
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
-import com.evernote.android.job.Job;
-import com.evernote.android.job.JobCreator;
-import com.evernote.android.job.JobManager;
-import com.evernote.android.job.JobRequest;
 import com.example.aventador.protectalarm.tools.Logger;
 import com.example.aventador.protectalarm.tools.Recaller;
 
@@ -27,11 +22,10 @@ import static com.example.aventador.protectalarm.tools.Recaller.JAMMER_JOB_TAG;
  * /!\ IT MUSTN'T BE USED FOR OTHER THINGS /!\
  * you are warned...
  */
-public class Jammer {
+class Jammer {
     private static final String TAG = "Jammer";
     private static Jammer instance;
     private boolean isInit;
-    private Activity activity;
     private AtomicBoolean jammingIsRunning; // indicate if jamming is on run.
 
     private GollumCallbackGetBoolean cbJammingDone; // called when the jamming is done.
@@ -48,12 +42,11 @@ public class Jammer {
         return instance;
     }
 
-    public void init(Activity activity) {
+    public void init() {
         if (isInit) {
             return;
         }
         isInit = true;
-        this.activity = activity;
     }
 
     public boolean isRunning() {
@@ -76,20 +69,21 @@ public class Jammer {
      * @param cbJammingDone
      * @return
      */
-    public void startJamming(int frequency, final GollumCallbackGetBoolean cbStartJamming, GollumCallbackGetBoolean cbJammingDone) {
+    public void startJamming(final Activity activity, int frequency, final GollumCallbackGetBoolean cbStartJamming, GollumCallbackGetBoolean cbJammingDone) {
         Logger.d(TAG, "startJamming()");
+        Logger.d(TAG, "startJamming(): Pandwarf available ? " + Pandwarf.getInstance().isAvailable(activity));
         if (!Pandwarf.getInstance().isAvailable(activity) || !jammingIsRunning.compareAndSet(false, true)) {
             cbStartJamming.done(false);
             return;
         }
         this.cbJammingDone = cbJammingDone;
-        Logger.d(TAG, "jamming can be started");
+        Logger.d(TAG, "startJamming(): jamming can be started");
         GollumDongle.getInstance(activity).rfJammingStart(0, frequency, DATA_RATE, MODULATION, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
-                Logger.d(TAG, "jamming started");
+                Logger.d(TAG, "startJamming(): jamming started");
                 cbStartJamming.done(true);
-                prepareJob(); // prepare the job dedicated to stop the jamming after a certain delay. see field: DELAY
+                prepareJob(activity); // prepare the job dedicated to stop the jamming after a certain delay. see field: DELAY
             }
         });
     }
@@ -97,13 +91,13 @@ public class Jammer {
     /**
      * Set jamming duration, after this period we call the job to stop jamming
      */
-    private void prepareJob() {
+    private void prepareJob(final Activity activity) {
         Logger.d(TAG, "scheduleEndingJob()");
         Recaller.getInstance().recallMe(JAMMER_JOB_TAG, DELAY, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 // stop jamming.
-                stopJamming(false, new GollumCallbackGetBoolean() {
+                stopJamming(activity, false, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
 
@@ -117,13 +111,14 @@ public class Jammer {
      * Stop jamming, cancel all jobs scheduled.
      * if stopJamming , cbJammingDone is called , this callback restart the specan.
      * Otherwise stopJamming is called by user (or if Bluetooth is disable), this action kill the protection routine.
-     * @param stopByUser
+     *
+     * @param stopByUser  indicate if the guardian is interrupted by an external actor (pandwarf disconnection, user action)
      * @param cbStopDone
      */
-    public void stopJamming(final boolean stopByUser, final GollumCallbackGetBoolean cbStopDone) {
+    public void stopJamming(Activity activity, final boolean stopByUser, final GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stopJamming()");
         if (!jammingIsRunning.compareAndSet(true, false)) {
-            cbStopDone.done(false);
+            cbStopDone.done(true);
             return;
         }
         Recaller.getInstance().cancel(JAMMER_JOB_TAG);

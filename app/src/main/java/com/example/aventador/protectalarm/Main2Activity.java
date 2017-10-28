@@ -1,31 +1,26 @@
 package com.example.aventador.protectalarm;
 
-import android.*;
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.CallSuper;
-import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
 import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
@@ -35,7 +30,6 @@ import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
-import com.example.aventador.protectalarm.process.Jammer;
 import com.example.aventador.protectalarm.process.Pandwarf;
 import com.example.aventador.protectalarm.process.Scanner;
 import com.example.aventador.protectalarm.storage.Configuration;
@@ -48,9 +42,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import static com.example.aventador.protectalarm.events.State.ATTACK_DETECTED;
@@ -120,7 +112,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 newStateDetected(state);
             }
         });
-        Jammer.getInstance().init(this); // init Jammer
         EventBus.getDefault().register(this);
         Recaller.getInstance(this); // init Recaller
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -180,7 +171,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                         Pandwarf.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
                             @Override
                             public void done(boolean b) {
-                                Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
+                                Pandwarf.getInstance().stopJamming(Main2Activity.this, true, new GollumCallbackGetBoolean() {
                                     @Override
                                     public void done(boolean b) {
                                         killDone.done(true);
@@ -269,7 +260,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             case START_SEARCH_THRESHOLD: {
                 String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
                 startThresholdSearch(frequency);
-
                 break;
             }
             case STOP_SEARCH_THRESHOLD: {
@@ -310,15 +300,13 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         Pandwarf.getInstance().stopGuardian(this, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
-                Jammer.getInstance().stopJamming(true, new GollumCallbackGetBoolean() {
+                Pandwarf.getInstance().stopJamming(Main2Activity.this, true, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
-                        GollumDongle.getInstance(Main2Activity.this);
                         Log.d(TAG, "Pandwarf stopped");
                         toastShow("protection stopped");
                     }
                 });
-
             }
         });
     }
@@ -333,30 +321,33 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     }
 
     private void startJamming(final String frequency, final String dbTolerance, final int peakTolerance, final int marginError) {
-        Logger.d(TAG, "startJamming");
-        Pandwarf.getInstance().stopGuardian(Main2Activity.this, new GollumCallbackGetBoolean() {
+        Logger.d(TAG, "startJamming()");
+        Pandwarf.getInstance().stopGuardian(this, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
                 waiting(1000);
-                Jammer.getInstance().startJamming(Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean startSuccess) {
-                        if (startSuccess) {
-                            toastShow("Jamming started");
-                        } else {
-                            toastShow("Can't start jamming");
-                            startGuardian(frequency, dbTolerance, peakTolerance, marginError);
-                        }
-                    }
-                }, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean b) {
-                        waiting(1000);
-                        Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
-                        startGuardian(frequency, dbTolerance, peakTolerance, marginError);
-                    }
-                });
+                Pandwarf.getInstance().startJamming(Main2Activity.this, Integer.valueOf(frequency),
+                        new GollumCallbackGetBoolean() {
+                            @Override
+                            public void done(boolean startSuccess) {
+                                if (startSuccess) {
+                                    Logger.d(TAG, "Jamming started");
+                                    toastShow("Jamming started");
+                                } else {
+                                    Logger.d(TAG, "Can't start jamming");
+                                    toastShow("Can't start jamming");
+                                    startGuardian(frequency, dbTolerance, peakTolerance, marginError);
+                                }
+                            }
+                        }, new GollumCallbackGetBoolean() {
+                            @Override
+                            public void done(boolean b) {
+                                waiting(1000);
+                                Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
+                                startGuardian(frequency, dbTolerance, peakTolerance, marginError);
+                            }
+                        });
             }
         });
     }

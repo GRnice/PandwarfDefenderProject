@@ -79,6 +79,7 @@ public class Pandwarf {
             Logger.e(TAG, "reset: dongle must be disconnected");
             return false;
         }
+        Jammer.getInstance().init(); // init Jammer
         guardianIsRunning = new AtomicBoolean(false);
         discoverIsRunning = new AtomicBoolean(false);
         fastProtectionAnalyseIsRunning = new AtomicBoolean(false);
@@ -212,25 +213,40 @@ public class Pandwarf {
             }
         });
 
+    }
 
+    public void startJamming(Activity activity, int frequency,  GollumCallbackGetBoolean cbStartDone, GollumCallbackGetBoolean cbJammingTerminate) {
+        Logger.d(TAG, "startJamming()");
+        Jammer.getInstance().startJamming(activity, frequency, cbStartDone, cbJammingTerminate);
     }
 
     /**
-     *
+     * Try to start specan in background
      * @param activity
      * @param frequency
-     * @param cbDone
+     * @param cbDone called in all cases, success/failure to start the specan.
      */
     private void startSpecan(final Activity activity, int frequency, final GollumCallbackGetBoolean cbDone) {
+        Logger.d(TAG, "startSpecan()");
+        if (!specanIsRunning.compareAndSet(false, true)) {
+            Logger.e(TAG, "specan already started");
+            cbDone.done(true);
+            return;
+        }
         GollumDongle.getInstance(activity).rfSpecanStart(0, frequency, FREQUENCY_BY_CHANNELS, NB_CHANNELS, DELAY_PACKETS_RSSI_MS, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
+                /*
+                If i < 0 the specan doesn't correctly started
+                If i == 0 specan correctly started. -> specanIsRunning will be set to true.
+                */
                 if (i < 0) {
                     Logger.e(TAG, "startSpecan: specan not started");
+                    specanIsRunning.set(false); // Finally, specan can't be started. retry ...
                     cbDone.done(false);
                 } else {
                     Logger.d(TAG, "specan started");
-                    specanIsRunning.set(true);
+
                     cbDone.done(true);
                 }
             }
@@ -238,20 +254,31 @@ public class Pandwarf {
     }
 
     /**
-     *
+     * Try to stop specan in background
      * @param activity
+     * @param cbStopDone
      */
     private void stopSpecan(final Activity activity, final GollumCallbackGetBoolean cbStopDone) {
-        Logger.d(TAG, "stop specan");
+        Logger.d(TAG, "stopSpecan()");
+        if (!specanIsRunning.compareAndSet(true, false)) {
+            Logger.e(TAG, "specan is already stopped");
+            cbStopDone.done(true);
+            return;
+        }
         GollumDongle.getInstance(activity).rfSpecanStop(0, new GollumCallbackGetInteger() {
             @Override
             public void done(int i) {
                 if (i < 0) {
+                    /*
+                    If i < 0 the specan doesn't correctly stopped
+                    If i == 0 specan correctly stopped.
+                     */
                     Logger.e(TAG, "startSpecan: specan not stopped");
+                    specanIsRunning.set(true); // not stopped finally, reset to true specanIsRunning boolean.
                     cbStopDone.done(false);
                 } else {
                     Logger.d(TAG, "specan is stopped");
-                    specanIsRunning.set(false);
+
                     cbStopDone.done(true);
                 }
             }
@@ -263,7 +290,7 @@ public class Pandwarf {
      * @param activity
      */
     public void stopDiscovery(Activity activity, GollumCallbackGetBoolean cbStopDone) {
-        Logger.d(TAG, "stop discovery");
+        Logger.d(TAG, "stopDiscovery()");
         Logger.d(TAG, "discoveryIsRunning ? : " + discoverIsRunning.get());
         if (!discoverIsRunning.compareAndSet(true, false)) {
             Logger.e(TAG, "stopDiscovery: already stopped");
@@ -278,26 +305,20 @@ public class Pandwarf {
     }
 
     /**
-     * Stop the protection
-     * @param activity
-     * @param cbStopDone
+     * Stop the guardian if it's running
+     * @param cbStopDone called when all process are stopped.
      */
-    public void stopGuardian(final Activity activity, GollumCallbackGetBoolean cbStopDone) {
+    public void stopGuardian(Activity activity, final GollumCallbackGetBoolean cbStopDone) {
         Logger.d(TAG, "stopGuardian()");
         Logger.d(TAG, "guardianIsRunning ? : " + guardianIsRunning.get());
         if (!guardianIsRunning.compareAndSet(true, false)) {
             Logger.e(TAG, "stopGuardian: guardian already stopped");
-            cbStopDone.done(true);
-            return;
-        }
-        if (guardianThread != null) {
+        } else if (guardianThread != null) {
             Logger.d(TAG, "stopGuardian: kill");
             guardianThread.kill();
             Logger.d(TAG, "stopGuardian: end kill");
         }
-
         stopSpecan(activity, cbStopDone);
-
     }
 
     public void stopFastProtectionAnalyzer(final Activity activity, final GollumCallbackGetBoolean cbStopDone) {
@@ -306,6 +327,7 @@ public class Pandwarf {
         if (! fastProtectionAnalyseIsRunning.compareAndSet(true, false)) {
             Logger.e(TAG, "stopFastProtectionAnalyzer: analyzer already stopped");
             cbStopDone.done(true); // true because fastProtectionAnalyzer is stopped.
+            return;
         }
 
         fastProtectionAnalyser.stop(new GollumCallbackGetBoolean() {
@@ -316,7 +338,16 @@ public class Pandwarf {
                 stopSpecan(activity, cbStopDone);
             }
         });
+    }
 
+    public void stopJamming(final Activity activity, boolean stopByUser, final GollumCallbackGetBoolean cbStopDone) {
+        Logger.d(TAG, "stopJamming()");
+        Jammer.getInstance().stopJamming(activity, stopByUser, new GollumCallbackGetBoolean() {
+            @Override
+            public void done(boolean b) {
+                stopSpecan(activity, cbStopDone);
+            }
+        });
     }
 
     /**
@@ -348,6 +379,15 @@ public class Pandwarf {
      * @return
      */
     public boolean isAvailable(Activity activity) {
+        Logger.d(TAG, "isAvailable()");
+        Logger.d(TAG, "isAvailable(): isConnected" + isConnected);
+        Logger.d(TAG, "isAvailable(): isDeviceConnected()" + GollumDongle.getInstance(activity).isDeviceConnected());
+        Logger.d(TAG, "isAvailable(): specanIsRunning()" + specanIsRunning());
+        Logger.d(TAG, "isAvailable() discoveryProcessIsRunning()" + discoveryProcessIsRunning());
+        Logger.d(TAG, "isAvailable() guardianProcessIsRunning" + guardianProcessIsRunning());
+        Logger.d(TAG, "isAvailable() Jammer.getInstance().isRunning()" + Jammer.getInstance().isRunning());
+        Logger.d(TAG, "isAvailable() fastProtectionAnalyseIsRunning.get()" + fastProtectionAnalyseIsRunning.get());
+
         return (isConnected && GollumDongle.getInstance(activity).isDeviceConnected() &&
                 !specanIsRunning() && !discoveryProcessIsRunning() && !guardianProcessIsRunning() && !Jammer.getInstance().isRunning() &&
                 !fastProtectionAnalyseIsRunning.get());
