@@ -71,9 +71,9 @@ class FastProtectionAnalyser {
 
     /**
      * Process:
-     *      * First of all, we start at DECREASE_DB, as long as an attack is not detected we INCREASE "currentDbTolerance"
-     *      * When an attack is detected we toogle to INCREASE_DB, that is, we reverse the process by decrementing weakly "currentDbTolerance"
-     *      * Finally when we don't detect an attack, we cans suppose have found the good db tolerance
+     * First of all we start at DECREASE_DB mode, as long as an attack is not detected we DECREASE "currentDbTolerance"
+     * When an attack is detected. we reverse the process by incrementing weakly "currentDbTolerance", it's the INCREASE_DB mode.
+     * Finally when we don't detect an attack, we cans suppose have found the good db tolerance
      *
      *      Example:
      *      We start at -10dB
@@ -84,8 +84,9 @@ class FastProtectionAnalyser {
      *      -88dB -> We detect an attack
      *      -86dB -> Again
      *      -84dB -> No attack detected. -84dB is a good value!!
-     *      But it's a limit, so to prevent a potentiel false alarm we go from -84dB to -82dB   /!\ IT'S ARBITRARY /!\
+     *      But it's a limit, so to prevent a potentiel false alarm we go from -84dB to -82dB   /!\ IT'S ARBITRARY BUT but it does the job ... /!\
      *
+     *  startGuardian create a GuardianThread with a fixed currentDbTolerance
      */
     private void startGuardian() {
         Logger.d(TAG, "startGuardian()");
@@ -105,10 +106,17 @@ class FastProtectionAnalyser {
         guardianThread.start(false);
     }
 
+    /**
+     * Indicate if the analyzer shall be stopped
+     * @return
+     */
     private boolean forceStopProcess() {
         return cbForceStopDone != null;
     }
 
+    /**
+     * @param cbForceStopDone
+     */
     public void stop(GollumCallbackGetBoolean cbForceStopDone) {
         Logger.d(TAG, "stop()");
         if (!run.get()) {
@@ -118,20 +126,26 @@ class FastProtectionAnalyser {
         this.cbForceStopDone = cbForceStopDone;
     }
 
+    /**
+     * Called when a guardian thread as not found an brute force attack (in this case a false positive)
+     */
     private void guardianIsDone() {
         Logger.d(TAG, "guardian done");
         if (forceStopProcess()) {
+            /*
+            Check if the analyzer shall be force stopped by user
+             */
             Logger.d(TAG, "guardianIsDone : forceStopProcess");
-            run.set(false);
-            cbForceStopDone.done(true);
+            run.set(false); // the analyzer doesn't work.
+            cbForceStopDone.done(true); // force stop is done.
             return;
         }
         if (status == INCREASE_DB) {
             /*
             If we are in INCREASE_DB, we must break the process because we know the good db tolerance.
             recall:
-                * First of all we start at DECREASE_DB, as long as an attack is not detected we INCREASE "currentDbTolerance"
-                * When an attack is detected. we reverse the process by incrementing weakly "currentDbTolerance"
+                * First of all we start at DECREASE_DB mode, as long as an attack is not detected we DECREASE "currentDbTolerance"
+                * When an attack is detected. we reverse the process by incrementing weakly "currentDbTolerance", it's the INCREASE_DB mode.
                 * Finally when we don't detect an attack, we cans suppose have found the good db tolerance
              */
             Logger.d(TAG, "guardianIsDone: status == INCREASE_DB: End of process");
@@ -139,17 +153,35 @@ class FastProtectionAnalyser {
             configuration.setDbTolerance(getCurrentDbTolerance() + 2);
             cbConfigFound.done(true, configuration);
             return;
+        } else {
+            /*
+            Otherwise, we add decibelStep to currentDbTolerance
+            regardless of the mode DECREASE/INCREASE_DB
+
+            and we restart the guardian
+             */
+            currentDbTolerance += decibelStep;
+            startGuardian();
         }
 
-        currentDbTolerance += decibelStep;
-        startGuardian();
+
     }
 
-
+    /**
+     * Called when an brute force attack is detected (in this case it's a false positive)
+     */
     private void attackDetected() {
         Logger.d(TAG, "attack detected");
-        guardianThread.kill();
+        guardianThread.kill(); // we kill the guardian.
         if (forceStopProcess()) {
+            /*
+            Check if the analyzer shall be force stopped by user
+
+            if true:    stop the analyzer.
+                        call cbForceStopDone
+                        and cancel all pending jobs associated to this process
+                        {@link com.example.aventador.protectalarm.tools.Recaller.FAST_PROTECTION_ANALYZER_TAG}
+             */
             Logger.d(TAG, "attackDetected : forceStopProcess");
             run.set(false);
             cbForceStopDone.done(true);
@@ -157,19 +189,24 @@ class FastProtectionAnalyser {
             return;
         }
         if (status == DECREASE_DB) {
+            /*
+            If an attack is detected in DECREASE_DB mode, we toogle to INCREASE_DB mode
+            in order to refine the db tolerance value.
+            as long as we detect a brute force attack, we INCREASE the "currentDbTolerance'
+             */
             Logger.d(TAG, "attackDetected: reverse process, decibelStep fixed to 2");
             decibelStep = 2;
             status = INCREASE_DB;
         }
 
-        checkThreadLater();
+        checkThreadLater(); // this routine check if guardianThread is dead.
 
     }
 
 
 
     /**
-     * Use Recaller to give the thread time to stop
+     * Use Recaller to give the guardian thread time to stop
      * When the callback is called, check if the thread is dead.
      * If it's not dead, call again Recaller.recallMe().
      */
@@ -181,11 +218,20 @@ class FastProtectionAnalyser {
         Recaller.getInstance().recallMe(FAST_PROTECTION_ANALYZER_TAG, 2000L, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
+                /*
+                Called each 2seconds, and while the guardian thread is not dead.
+                 */
                 if (guardianThread.isAlive()) {
                     Logger.d(TAG, "guardianThread is always alive");
-                    checkThreadLater();
+                    checkThreadLater(); // retry and check for the next time
                 } else {
                     Logger.d(TAG, "guardianThread is dead");
+                    /*
+                    Otherwise, we add decibelStep to currentDbTolerance
+                    regardless of the mode DECREASE/INCREASE_DB
+
+                    and we restart the guardian
+                    */
                     currentDbTolerance += decibelStep;
                     startGuardian();
                 }

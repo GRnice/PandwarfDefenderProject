@@ -29,7 +29,6 @@ import static com.example.aventador.protectalarm.tools.Recaller.JAMMER_JOB_TAG;
  */
 public class Jammer {
     private static final String TAG = "Jammer";
-    private static final String JOB_TAG = "jamming_tag";
     private static Jammer instance;
     private boolean isInit;
     private Activity activity;
@@ -100,7 +99,7 @@ public class Jammer {
      */
     private void prepareJob() {
         Logger.d(TAG, "scheduleEndingJob()");
-        Recaller.getInstance().recallMe(JAMMER_JOB_TAG, 10_000L, new GollumCallbackGetBoolean() {
+        Recaller.getInstance().recallMe(JAMMER_JOB_TAG, DELAY, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 // stop jamming.
