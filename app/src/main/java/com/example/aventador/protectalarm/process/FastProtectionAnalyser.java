@@ -21,6 +21,26 @@ import static com.example.aventador.protectalarm.tools.Recaller.FAST_PROTECTION_
 
 /**
  * Visibility fixed at Package-private!
+ *
+ * FastProtectionAnalyser:
+ * it calculates the best value in decibel automatically
+ *
+ * Process:
+ * First of all we start at DECREASE_DB mode, as long as an attack is not detected we DECREASE "currentDbTolerance"
+ * When an attack is detected. we reverse the process by incrementing weakly "currentDbTolerance", it's the INCREASE_DB mode.
+ * Finally when we don't detect an attack, we cans suppose have found the good db tolerance
+ *
+ *      Example:
+ *      We start at -10dB
+ *      -10dB -> no Attack detected.
+ *      ...
+ *      -90dB -> We detect an attack at -90dB !
+ *      we reverse at this time we reverse the process
+ *      -88dB -> We detect an attack
+ *      -86dB -> Again
+ *      -84dB -> No attack detected. -84dB is a good value!!
+ *      But it's a limit, so to prevent a potentiel false alarm we go from -84dB to -82dB   /!\ IT'S ARBITRARY BUT but it does the job ... /!\
+ *
  */
 class FastProtectionAnalyser {
 
@@ -33,7 +53,11 @@ class FastProtectionAnalyser {
 
     private int nbChannels;
     private Activity activity;
-    private final int DB_TOLERANCE_MINIMUM = -115; // -115db min
+
+    private final int DB_STEP_DECREASE = -10;
+    private final int DB_STEP_INCREASE = 2;
+
+    private final int DB_TOLERANCE_MINIMUM = -120; // -115db min
     private final int DB_TOLERANCE_MAXIMUM = -10; // 10db max
     private final int PEAK_TOLERANCE = 40; // 40%
     private final int MARGIN_ERROR = 10; // 10%
@@ -46,6 +70,15 @@ class FastProtectionAnalyser {
 
     private GollumCallbackGetBoolean cbForceStopDone = null; // null by default. If cbForceStopDone is not null the analyzer is force stopped.
 
+    /**
+     *
+     * @param activity
+     * @param frequency
+     * @param nbScans
+     * @param nbSequences
+     * @param nbChannels nb channels required, for Specan
+     * @param cbConfigurationFound called when FastProtectionAnalyser has found the optimal configuration. {@link Configuration}
+     */
     public FastProtectionAnalyser(Activity activity, int frequency, int nbScans, int nbSequences, int nbChannels, GollumCallbackGetConfiguration cbConfigurationFound) {
         this.activity = activity;
         this.nbScans = nbScans;
@@ -58,35 +91,23 @@ class FastProtectionAnalyser {
         this.configuration = new Configuration(frequency, DB_TOLERANCE_MINIMUM, PEAK_TOLERANCE, MARGIN_ERROR);
     }
 
+    /**
+     * start the analysis process.
+     * - in DECREASE_DB mode
+     */
     public void start() {
         if (!run.compareAndSet(false, true)) {
             return; // one call of run() expected !!!!
         }
         currentDbTolerance = DB_TOLERANCE_MAXIMUM;
         status = DECREASE_DB;
-        decibelStep = -10;
+        decibelStep = DB_STEP_DECREASE;
         cbForceStopDone = null;
         startGuardian();
     }
 
     /**
-     * Process:
-     * First of all we start at DECREASE_DB mode, as long as an attack is not detected we DECREASE "currentDbTolerance"
-     * When an attack is detected. we reverse the process by incrementing weakly "currentDbTolerance", it's the INCREASE_DB mode.
-     * Finally when we don't detect an attack, we cans suppose have found the good db tolerance
-     *
-     *      Example:
-     *      We start at -10dB
-     *      -10dB -> no Attack detected.
-     *      ...
-     *      -90dB -> We detect an attack at -90dB !
-     *      we reverse at this time we reverse the process
-     *      -88dB -> We detect an attack
-     *      -86dB -> Again
-     *      -84dB -> No attack detected. -84dB is a good value!!
-     *      But it's a limit, so to prevent a potentiel false alarm we go from -84dB to -82dB   /!\ IT'S ARBITRARY BUT but it does the job ... /!\
-     *
-     *  startGuardian create a GuardianThread with a fixed currentDbTolerance
+     * startGuardian create a GuardianThread with a fixed currentDbTolerance
      */
     private void startGuardian() {
         Logger.d(TAG, "startGuardian()");
@@ -115,7 +136,7 @@ class FastProtectionAnalyser {
     }
 
     /**
-     * @param cbForceStopDone
+     * @param cbForceStopDone Called when the FastProtectionAnalyser process is stopped.
      */
     public void stop(GollumCallbackGetBoolean cbForceStopDone) {
         Logger.d(TAG, "stop()");
@@ -147,10 +168,12 @@ class FastProtectionAnalyser {
                 * First of all we start at DECREASE_DB mode, as long as an attack is not detected we DECREASE "currentDbTolerance"
                 * When an attack is detected. we reverse the process by incrementing weakly "currentDbTolerance", it's the INCREASE_DB mode.
                 * Finally when we don't detect an attack, we cans suppose have found the good db tolerance
+                * But it's a limit, so to prevent a potentiel false alarm we add 2 to the currentDbTolerance   /!\ IT'S ARBITRARY BUT but it does the job ... /!\
              */
             Logger.d(TAG, "guardianIsDone: status == INCREASE_DB: End of process");
             Logger.d(TAG, "guardianIsDone: db tolerance: " + getCurrentDbTolerance());
-            configuration.setDbTolerance(getCurrentDbTolerance() + 2);
+            configuration.setDbTolerance(getCurrentDbTolerance() + DB_STEP_INCREASE);
+            run.set(false);
             cbConfigFound.done(true, configuration);
             return;
         } else {
@@ -195,7 +218,7 @@ class FastProtectionAnalyser {
             as long as we detect a brute force attack, we INCREASE the "currentDbTolerance'
              */
             Logger.d(TAG, "attackDetected: reverse process, decibelStep fixed to 2");
-            decibelStep = 2;
+            decibelStep = DB_STEP_INCREASE;
             status = INCREASE_DB;
         }
 
@@ -264,7 +287,10 @@ class FastProtectionAnalyser {
     }
 
     enum AnalyzerStatus {
-        INCREASE_DB,
-        DECREASE_DB;
+        /*
+        States of the FastProtectionAnalyzer process.
+         */
+        INCREASE_DB, // --> currentDbTolerance will raise up
+        DECREASE_DB; // --> currentDbTolerance will decrease
     }
 }

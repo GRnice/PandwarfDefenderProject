@@ -22,10 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *                              calculating the tolerance threshold making it possible to distinguish a brute force attack.
  *                              monitor if an attack is in progress.
  *
- * It's impossible to start specan if jamming is running.
- * It's impossible to start jamming if specan is running.
- * It's impossible to start specan if the pandwarf has not stop correctly jamming or previous specan.
- * It's impossible to start jamming if the pandwarf has not stop correctly jamming or previous specan.
+ *
  */
 public class Pandwarf {
 
@@ -88,16 +85,18 @@ public class Pandwarf {
         return true;
     }
 
+    //  55f3395f1e6713f4bef36c4e5a41b434
+
     /**
      * Start the protection, is called when user click on button "start protection" of guardian fragment.
      *
      * - cbStartGuardianDone is called when the guardian is started (true) or not (false).
      * - cbAttackDetected is called when the guardian detects an attack.
-     * @param activity
+     * @param activity // TODO: when Pandwarf SDK will be upgraded, demand a Context.
      * @param frequency
      * @param dbTolerance
-     * @param cbStartGuardianDone
-     * @param cbAttackDetected
+     * @param cbStartGuardianDone Called when guardian is started.
+     * @param cbAttackDetected Called when an attack is detected.
      * @return
      */
     public void startGuardian(final Activity activity, final int frequency, final int dbTolerance,
@@ -135,8 +134,8 @@ public class Pandwarf {
      * - cbDiscoveryDone called when a threshold value is found
      * @param activity
      * @param frequency
-     * @param cbStartDiscoveryDone
-     * @param cbDiscoveryDone
+     * @param cbStartDiscoveryDone Called when discovery is started
+     * @param cbDiscoveryDone Called when discovery is done, db tolerance value will be given.
      * @return
      */
     public void startDiscovery(final Activity activity, int frequency, final GollumCallbackGetBoolean cbStartDiscoveryDone, final GollumCallbackGetInteger cbDiscoveryDone) {
@@ -171,8 +170,8 @@ public class Pandwarf {
      *
      * @param activity
      * @param frequency
-     * @param cbFastProtectionAnalyzerStarted
-     * @param cbFastProtectionAnalyseDone
+     * @param cbFastProtectionAnalyzerStarted Called when Fast protection analyzer is started.
+     * @param cbFastProtectionAnalyseDone Called when Fast protection analyzer is done.
      */
     public void startFastProtectionAnalyser(final Activity activity, final int frequency,
                                             final GollumCallbackGetBoolean cbFastProtectionAnalyzerStarted, final GollumCallbackGetConfiguration cbFastProtectionAnalyseDone) {

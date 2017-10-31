@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 
 /**
- * This Thread is responsible for calculating the tolerance threshold making it possible to distinguish a brute force attack.
+ * This Thread is responsible for calculating the decibel tolerance threshold making it possible to distinguish a brute force attack.
  */
 public class DiscoverThread extends Runner {
 
@@ -23,6 +23,14 @@ public class DiscoverThread extends Runner {
     private GollumCallbackGetInteger cbDone;
     private ArrayList<Integer> allMeans;
 
+    /**
+     *
+     * @param activity
+     * @param nbScans
+     * @param nbSequences
+     * @param nbChannels
+     * @param cbDone Called when the thread is terminated, db tolerance value will be given.
+     */
     public DiscoverThread(Activity activity, int nbScans, int nbSequences, int nbChannels, GollumCallbackGetInteger cbDone) {
         super(activity, nbScans, nbSequences, nbChannels);
         this.cbDone = cbDone;
@@ -53,7 +61,7 @@ public class DiscoverThread extends Runner {
                     Logger.d(TAG, "rssi: " + Arrays.toString(rssi_buffer));
                     for (int k = 0; k < nbChannels; k++) {
                         nbRssiRceived++;
-                        sum += rssi_buffer[k]; // this sum will be divided by nbEl
+                        sum += rssi_buffer[k]; // this sum will be divided by nbRssiRceived
                     }
                 }
             }

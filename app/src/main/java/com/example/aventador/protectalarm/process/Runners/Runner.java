@@ -22,6 +22,19 @@ public abstract class Runner extends Thread {
 
     protected AtomicBoolean run;
 
+    /**
+     * All subclass of Runner uses the signals received.
+     * by adopting a specific pattern using a number of sequences and scans
+     *
+     * A Sequence represents a number of scans to run.
+     * An Scan represents a number of calls to the function rfSpecanGetRssi (included in PandwaRF SDK)
+     *
+     *
+     * @param activity
+     * @param nbScans
+     * @param nbSequences
+     * @param nbChannels
+     */
     public Runner(Activity activity, int nbScans, int nbSequences, int nbChannels) {
         this.activity = activity;
         this.nbScans = nbScans;
@@ -31,7 +44,7 @@ public abstract class Runner extends Thread {
     }
 
     /**
-     *
+     * Ask the Pandwarf to request a list of received signals, expressed in decibels
      * @return
      */
     @Nullable
