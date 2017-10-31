@@ -13,7 +13,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,31 +23,23 @@ import android.widget.Toast;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
 import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
-import com.example.aventador.protectalarm.callbacks.GollumCallbackGetConfiguration;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
-import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.process.Pandwarf;
 import com.example.aventador.protectalarm.process.Scanner;
-import com.example.aventador.protectalarm.storage.Configuration;
+import com.example.aventador.protectalarm.process.task.TaskPollManager;
 import com.example.aventador.protectalarm.tools.Logger;
 import com.example.aventador.protectalarm.tools.Recaller;
-import com.example.aventador.protectalarm.tools.Tools;
-import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import static com.example.aventador.protectalarm.events.State.ATTACK_DETECTED;
 import static com.example.aventador.protectalarm.events.State.DISCONNECTED;
-import static com.example.aventador.protectalarm.events.State.PROTECTION_FAIL;
-import static com.example.aventador.protectalarm.events.State.SEARCH_OPTIMAL_PEAK_FAIL;
 
 public class Main2Activity extends AppCompatActivity implements ViewPager.OnPageChangeListener {
 
@@ -113,7 +104,8 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             }
         });
         EventBus.getDefault().register(this);
-        Recaller.getInstance(this); // init Recaller
+        Recaller.getInstance(this); // init Recaller.
+        TaskPollManager.getInstance(this); // TaskPollManager.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION,
                             android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -236,239 +228,24 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                 break;
             }
 
-            case START_FAST_PROTECTION_ANALYZER: {
-                String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                startFastProtectionAnalyser(frequency);
-                break;
-            }
 
-            case STOP_FAST_PROTECTION_ANALYZER: {
-                stopFastProtectionAnalyzer(new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean stopSuccess) {
-                        if (!stopSuccess) {
-                            Logger.e(TAG, "impossible to stop fast protection, nota: check if specan is stopped");
-                            toastShow("Fast Protection can't be stopped");
-                        } else {
-                            toastShow("Fast Protection is stopped");
-                        }
-
-                    }
-                });
-            }
-
-            case START_SEARCH_THRESHOLD: {
-                String frequency = actionEvent.getParameters().getString(Parameter.FREQUENCY.toString());
-                startThresholdSearch(frequency);
-                break;
-            }
-            case STOP_SEARCH_THRESHOLD: {
-                stopThresholdSearch();
-                break;
-            }
-            case START_PROTECTION: {
-                final String frequency = actionEvent.getParameter(Parameter.FREQUENCY);
-                final String dbTolerance =  actionEvent.getParameter(Parameter.RSSI_VALUE);
-                final int peakTolerance = Integer.valueOf(actionEvent.getParameter(Parameter.PEAK_TOLERANCE));
-                final int marginError = Integer.valueOf(actionEvent.getParameter(Parameter.MARGIN_ERROR));
-                startGuardian(frequency, dbTolerance, peakTolerance, marginError);
-
-                break;
-            }
+            case START_FAST_PROTECTION_ANALYZER:
+            case STOP_FAST_PROTECTION_ANALYZER:
+            case START_SEARCH_THRESHOLD:
+            case STOP_SEARCH_THRESHOLD:
+            case START_PROTECTION:
             case STOP_PROTECTION: {
-                stopGuardian();
+                TaskPollManager.getInstance().put(actionEvent);
                 break;
             }
             case START_JAMMING: {
                 toastShow("Attack detected");
 
                 Logger.d(TAG, "Attack detected");
-                final String frequency = actionEvent.getParameter(Parameter.FREQUENCY);
-                final String dbTolerance = actionEvent.getParameter(Parameter.RSSI_VALUE);
-                final int peakTolerance = Integer.valueOf(actionEvent.getParameter(Parameter.PEAK_TOLERANCE));
-                final int marginError = Integer.valueOf(actionEvent.getParameter(Parameter.MARGIN_ERROR));
-                startJamming(frequency, dbTolerance, peakTolerance, marginError);
+                TaskPollManager.getInstance().put(actionEvent);
+                break;
             }
         }
-    }
-
-    private void stopFastProtectionAnalyzer(GollumCallbackGetBoolean cbStopDone) {
-        Pandwarf.getInstance().stopFastProtectionAnalyzer(this, cbStopDone);
-    }
-
-    private void stopGuardian() {
-        Pandwarf.getInstance().stopGuardian(this, new GollumCallbackGetBoolean() {
-            @Override
-            public void done(boolean b) {
-                Pandwarf.getInstance().stopJamming(Main2Activity.this, true, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean b) {
-                        Log.d(TAG, "Pandwarf stopped");
-                        toastShow("protection stopped");
-                    }
-                });
-            }
-        });
-    }
-
-    private void stopThresholdSearch() {
-        Pandwarf.getInstance().stopDiscovery(this, new GollumCallbackGetBoolean() {
-            @Override
-            public void done(boolean b) {
-
-            }
-        });
-    }
-
-    private void startJamming(final String frequency, final String dbTolerance, final int peakTolerance, final int marginError) {
-        Logger.d(TAG, "startJamming()");
-        Pandwarf.getInstance().stopGuardian(this, new GollumCallbackGetBoolean() {
-            @Override
-            public void done(boolean b) {
-                Logger.d(TAG, "START_JAMMING, stopGuardian : callback res :" + b);
-                waiting(1000);
-                Pandwarf.getInstance().startJamming(Main2Activity.this, Integer.valueOf(frequency),
-                        new GollumCallbackGetBoolean() {
-                            @Override
-                            public void done(boolean startSuccess) {
-                                if (startSuccess) {
-                                    Logger.d(TAG, "Jamming started");
-                                    toastShow("Jamming started");
-                                } else {
-                                    Logger.d(TAG, "Can't start jamming");
-                                    toastShow("Can't start jamming");
-                                    startGuardian(frequency, dbTolerance, peakTolerance, marginError);
-                                }
-                            }
-                        }, new GollumCallbackGetBoolean() {
-                            @Override
-                            public void done(boolean b) {
-                                waiting(1000);
-                                Logger.d(TAG, "START_JAMMING, startJamming : callback res :" + b);
-                                startGuardian(frequency, dbTolerance, peakTolerance, marginError);
-                            }
-                        });
-            }
-        });
-    }
-
-    /**
-     *
-     * @param frequency
-     */
-    private void startFastProtectionAnalyser(String frequency) {
-        Logger.d(TAG, "startFastProtectionAnalyser");
-        Pandwarf.getInstance().startFastProtectionAnalyser(this, Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
-            @Override
-            public void done(boolean startSuccess) {
-                if (!startSuccess) {
-                    Logger.e(TAG, "startFastProtectionAnalyser: fast protection analyzer not started, FAIL");
-                    EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_FAIL, ""));
-                } else {
-                    toastShow("Fast protection analyzer started");
-                }
-
-            }
-        }, new GollumCallbackGetConfiguration() {
-            @Override
-            public void done(boolean success, Configuration configuration) {
-                /*
-                Called when a good configuration is found.
-                or not.
-                 */
-                Pandwarf.getInstance().stopFastProtectionAnalyzer(Main2Activity.this, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean stopSuccess) {
-                        if (!stopSuccess) {
-                            toastShow("error when terminating fast protection analyzer");
-                        } else {
-                            toastShow("Fast protection analyzer stopped");
-                        }
-                    }
-                });
-
-                if (!success) {
-                    toastShow("Rapid protection analyzer has no result");
-                    EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_FAIL, ""));
-                } else {
-                    Main2Activity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            toastShow("Rapid Protection analyzer found the right parameters");
-                        }
-                    });
-
-                    HashMap<String, String> parameters = new HashMap<>();
-                    parameters.put(Parameter.CONFIGURATION.toString(), new Gson().toJson(configuration));
-                    EventBus.getDefault().postSticky(new StateEvent(State.FAST_PROTECTION_ANALYZER_DONE, parameters));
-                }
-            }
-        });
-    }
-
-    private void startThresholdSearch(String frequency) {
-        Pandwarf.getInstance().startDiscovery(this, Integer.valueOf(frequency), new GollumCallbackGetBoolean() {
-            @Override
-            public void done(boolean startSuccess) {
-                if (!startSuccess) {
-                    toastShow("Fail to search threshold");
-                    EventBus.getDefault().postSticky(new StateEvent(SEARCH_OPTIMAL_PEAK_FAIL, ""));
-                }
-            }
-        }, new GollumCallbackGetInteger() {
-            @Override
-            public void done(final int rssi) {
-                Log.d(TAG, "Threshold found");
-                Pandwarf.getInstance().stopDiscovery(Main2Activity.this, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean b) {
-                        HashMap<String, String> parameter = new HashMap<String, String>();
-                        parameter.put(Parameter.RSSI_VALUE.toString(), String.valueOf(rssi));
-                        EventBus.getDefault().postSticky(new StateEvent(State.SEARCH_OPTIMAL_PEAK_DONE, parameter));
-                    }
-                });
-            }
-        });
-    }
-
-    private void startGuardian(final String frequency, final String dbTolerance, final int peakTolerance, final int marginError) {
-        Logger.d(TAG, "startGuardian");
-        Pandwarf.getInstance().startGuardian(this, Integer.valueOf(frequency),
-                Integer.valueOf(dbTolerance), peakTolerance, marginError, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean startSuccess) {
-                        if (!startSuccess) {
-                            Logger.e(TAG, "guardian not started");
-                            toastShow("Fail to start protection");
-                            EventBus.getDefault().postSticky(new StateEvent(PROTECTION_FAIL, ""));
-                        } else {
-                            Logger.d(TAG, "guardian started");
-                            String message = "protection started\n frequency: " + frequency +
-                                    "\n db tolerance: " + dbTolerance +
-                                    "\n peak tolerance: " + peakTolerance +
-                                    "\n margin error: " + marginError;
-                            toastShow(message);
-
-                        }
-                    }
-                }, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean b) {
-                        HashMap<String, String> parametersAttackDetected = new HashMap<>();
-                        parametersAttackDetected.put(Parameter.DATE.toString(), Tools.getCurrentTime());
-                        EventBus.getDefault().postSticky(new StateEvent(ATTACK_DETECTED, parametersAttackDetected));
-
-                        HashMap<String, String> parameters = new HashMap<>();
-                        parameters.put(Parameter.FREQUENCY.toString(), frequency);
-                        parameters.put(Parameter.RSSI_VALUE.toString(), dbTolerance);
-                        parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(peakTolerance));
-                        parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(marginError));
-
-                        EventBus.getDefault().postSticky(new ActionEvent(Action.START_JAMMING, parameters));
-                    }
-                });
-
-
     }
 
     /**
@@ -492,13 +269,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         }
     }
 
-    private void waiting(int ms) {
-        try {
-            Thread.sleep(ms); // latency ... shit.
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+
 
     private void toastShow(String message) {
         Toast toast = Toast.makeText(Main2Activity.this, message, Toast.LENGTH_SHORT);
