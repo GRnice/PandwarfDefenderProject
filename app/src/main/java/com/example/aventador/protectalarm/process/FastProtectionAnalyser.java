@@ -238,7 +238,7 @@ class FastProtectionAnalyser {
             cbForceStopDone.done(true);
             return;
         }
-        Recaller.getInstance().recallMe(FAST_PROTECTION_ANALYZER_TAG, 2000L, new GollumCallbackGetBoolean() {
+        Recaller.getInstance().recallMe(FAST_PROTECTION_ANALYZER_TAG, 1000L, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
                 /*

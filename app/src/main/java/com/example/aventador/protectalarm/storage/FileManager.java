@@ -28,7 +28,7 @@ import java.io.PrintWriter;
  */
 
 /**
- * He is responsible for loading and saving the Configurations.
+ * It's responsible for loading and saving the Configurations.
  * It use Gson library to serialize/deserialize the differents configs.
  * It use a FilePicker from android arsenal to select a config.
  */

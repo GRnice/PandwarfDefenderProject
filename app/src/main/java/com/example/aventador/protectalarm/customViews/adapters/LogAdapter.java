@@ -60,7 +60,7 @@ public class LogAdapter extends ArrayAdapter<HistoryLog> {
         }
 
         HistoryLog historyLog = getItem(position);
-        /**
+        /*
          * Now we check the warning level of the given historyLog.
          */
         if (historyLog.getWarningLevel().equals(HistoryLog.WARNING_LEVEL.HIGH)) {

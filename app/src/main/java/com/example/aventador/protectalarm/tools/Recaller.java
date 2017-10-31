@@ -42,6 +42,10 @@ public class Recaller {
         return instance;
     }
 
+    /**
+     *
+     * @param context
+     */
     private Recaller(Context context) {
         callbackMapping = new HashMap<>();
         jobManager = JobManager.create(context);
@@ -62,6 +66,10 @@ public class Recaller {
         jobManager.addJobCreator(jobCreator);
     }
 
+    /**
+     * Called when a Job or a LittleWait is finished.
+     * @param tag tag of the job ended
+     */
     private void endingJob(String tag) {
         Logger.d(TAG, "endingJob()");
         if (callbackMapping.containsKey(tag)) {
@@ -71,10 +79,19 @@ public class Recaller {
         }
     }
 
+    /**
+     * Like a timer, the given callback will be called when time is up.
+     * @param identifier unique identifier
+     * @param duration Time in millis
+     * @param cbToRecall Called when time is elapsed
+     */
     public void recallMe(final String identifier, long duration, final GollumCallbackGetBoolean cbToRecall) {
         Logger.d(TAG, "recallMe()");
-        callbackMapping.put(identifier, cbToRecall);
 
+        callbackMapping.put(identifier, cbToRecall);
+        if (duration < 2000L) {
+            new LittleWait(identifier, duration).start();
+        }
         new JobRequest.Builder(identifier)
                 .setExact(duration) // in n seconds, onRunJob is called.
                 .setPersisted(true)
@@ -82,8 +99,34 @@ public class Recaller {
                 .schedule();
     }
 
+    /**
+     * cancel a recall associated to the given tag.
+     * @param tag
+     */
     public void cancel(String tag) {
         jobManager.cancelAllForTag(tag);
+        if (callbackMapping.containsKey(tag)) {
+            callbackMapping.remove(tag);
+        }
+    }
+
+    private class LittleWait extends Thread {
+        private long delay;
+        private String tag;
+
+        public LittleWait(String tag, long delay) {
+            this.tag = tag;
+            this.delay  = delay;
+        }
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            endingJob(tag);
+        }
     }
 
 
