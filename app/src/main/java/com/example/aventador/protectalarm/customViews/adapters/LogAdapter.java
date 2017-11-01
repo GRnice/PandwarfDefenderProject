@@ -15,9 +15,6 @@ import com.example.aventador.protectalarm.customViews.HistoryLog;
 
 import java.util.List;
 
-/**
- * Created by Giangrasso on 03/10/2017.
- */
 
 /**
  * Used by HistorySubView.class {@link com.example.aventador.protectalarm.customViews.HistorySubView }

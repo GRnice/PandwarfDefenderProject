@@ -31,23 +31,11 @@ import com.example.aventador.protectalarm.storage.FileManager;
  */
 public class SettingsSubView extends GuardianSubView {
 
-    private int tolerance = 50; // default value
-    private int marginError = 10; // default value
-
     /**
      * cbLoadCalled is called when user press load button.
      * cbSaveCalled is called when user press save button.
      */
     private GollumCallbackGetBoolean cbLoadCalled, cbSaveCalled;
-
-    private TextView toleranceTextView;
-    private TextView marginErrorTextView;
-    private BootstrapButton saveButton;
-    private BootstrapButton loadButton;
-    private SeekBar seekBarTolerance;
-    private SeekBar seekBarMarginError;
-
-
 
     private ViewPager viewPager;
     private Context context;
@@ -56,14 +44,6 @@ public class SettingsSubView extends GuardianSubView {
         super(title, layoutResId);
         this.context = context;
         this.viewPager = viewPager;
-    }
-
-    public int getPeakTolerance() {
-        return tolerance;
-    }
-
-    public int getMarginError() {
-        return marginError;
     }
 
     /**
@@ -78,50 +58,13 @@ public class SettingsSubView extends GuardianSubView {
         ImageView switchToHistoryImageView = (ImageView) layout.findViewById(R.id.switch_page_image_view);
         switchToHistoryImageView.setOnClickListener(this);
 
-        toleranceTextView = (TextView) layout.findViewById(R.id.tolerance_textview);
-        marginErrorTextView = (TextView) layout.findViewById(R.id.margin_error_textview);
-
-        seekBarTolerance = (SeekBar) layout.findViewById(R.id.tolerance_seekbar);
-        seekBarTolerance.setOnSeekBarChangeListener(this);
-        seekBarTolerance.setProgress(tolerance);
-
-        seekBarMarginError = (SeekBar) layout.findViewById(R.id.margin_error_seekbar);
-        seekBarMarginError.setOnSeekBarChangeListener(this);
-        seekBarMarginError.setProgress(marginError);
-
-        saveButton = (BootstrapButton) layout.findViewById(R.id.save_config_button);
+        BootstrapButton saveButton = (BootstrapButton) layout.findViewById(R.id.save_config_button);
         saveButton.setOnClickListener(this);
 
-        loadButton = (BootstrapButton) layout.findViewById(R.id.load_config_button);
+        BootstrapButton loadButton = (BootstrapButton) layout.findViewById(R.id.load_config_button);
         loadButton.setOnClickListener(this);
 
         return layout;
-    }
-
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-        switch (seekBar.getId()) {
-            case R.id.tolerance_seekbar: {
-                tolerance = i;
-                toleranceTextView.setText("Tolerance: " + tolerance + "%");
-                break;
-            }
-            case R.id.margin_error_seekbar: {
-                marginError = i;
-                marginErrorTextView.setText("Margin error : " + marginError + "%");
-                break;
-            }
-        }
-    }
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
     }
 
     @Override
@@ -159,13 +102,5 @@ public class SettingsSubView extends GuardianSubView {
      */
     public void setOnSaveConfig(GollumCallbackGetBoolean cbDone) {
         this.cbSaveCalled = cbDone;
-    }
-
-    public void setPeakTolerance(int peakTolerance) {
-        this.seekBarTolerance.setProgress(peakTolerance);
-    }
-
-    public void setMarginError(int marginError) {
-        this.seekBarMarginError.setProgress(marginError);
     }
 }

@@ -12,8 +12,12 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,7 +29,6 @@ import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoole
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetGeneric;
 import com.example.aventador.protectalarm.customViews.CustomPagerAdapter;
 import com.example.aventador.protectalarm.customViews.HistoryLog;
-import com.example.aventador.protectalarm.customViews.SettingsSubView;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
@@ -35,6 +38,7 @@ import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.storage.FileManager;
 import com.example.aventador.protectalarm.tools.Logger;
 import com.example.aventador.protectalarm.tools.Tools;
+import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -42,19 +46,37 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.HashMap;
 
+import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.NO_PROCESS_ON_RUN;
+import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.PROTECTION_ON_RUN;
+import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.SCAN_ON_RUN;
 
-public class GuardianFragment extends Fragment {
+
+public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
 
     private final static String TAG = "GuardianFragment";
+
+    private GuardianState currentState;
 
     private boolean frequencyChangeEventReceived;
 
     private LinearLayout layoutStartStopProtection;
     private BootstrapButton startStopProtectionButton;
+
     private TextView frequencyTextView;
     private EditText frequencyEditText;
     private TextView dbToleranceTextView;
     private EditText dbToleranceEditText;
+    private TextView toleranceTextView;
+    private TextView marginErrorTextView;
+    private SeekBar seekBarTolerance;
+    private SeekBar seekBarMarginError;
+    private int tolerance = 50; // default value
+    private int marginError = 10; // default value
+
+    private CheckBox checkBoxAdvancedMode;
+
+    private ProgressBar progressBarPandwarfRunning;
+
     private ViewPager viewPager;
     private Configuration currentConfiguration;
 
@@ -87,6 +109,7 @@ public class GuardianFragment extends Fragment {
         // -------------------- //
         currentConfiguration = new Configuration(); // contains values of frequency, dbTolerance, peak tolerance & margin error.
         frequencyChangeEventReceived = false;
+        currentState = NO_PROCESS_ON_RUN;
         frequencyTextView = (TextView) bodyView.findViewById(R.id.frequency_guardian_textview);
         frequencyEditText = (EditText) bodyView.findViewById(R.id.frequency_guardian_edittext);
         frequencyEditText.addTextChangedListener(new TextWatcher() {
@@ -107,17 +130,39 @@ public class GuardianFragment extends Fragment {
         });
         dbToleranceTextView = (TextView) bodyView.findViewById(R.id.db_tolerance_guardian_textview);
         dbToleranceEditText = (EditText) bodyView.findViewById(R.id.dbtolerance_guardian_edittext);
+        dbToleranceEditText.setEnabled(false);
+
+        toleranceTextView = (TextView) bodyView.findViewById(R.id.tolerance_textview);
+        marginErrorTextView = (TextView) bodyView.findViewById(R.id.margin_error_textview);
+
+        seekBarTolerance = (SeekBar) bodyView.findViewById(R.id.tolerance_seekbar);
+        seekBarTolerance.setOnSeekBarChangeListener(this);
+        seekBarTolerance.setProgress(tolerance);
+        seekBarTolerance.setEnabled(false);
+
+        seekBarMarginError = (SeekBar) bodyView.findViewById(R.id.margin_error_seekbar);
+        seekBarMarginError.setOnSeekBarChangeListener(this);
+        seekBarMarginError.setProgress(marginError);
+        seekBarMarginError.setEnabled(false);
+
+        checkBoxAdvancedMode = (CheckBox) bodyView.findViewById(R.id.advanced_mode_checkbox);
+        checkBoxAdvancedMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                dbToleranceEditText.setEnabled(checked);
+                seekBarTolerance.setEnabled(checked);
+                seekBarMarginError.setEnabled(checked);
+            }
+        });
+
+        progressBarPandwarfRunning = (ProgressBar) bodyView.findViewById(R.id.pandwarf_running_progressbar);
+        progressBarPandwarfRunning.setIndeterminate(true);
+        progressBarPandwarfRunning.setVisibility(View.INVISIBLE);
 
         layoutStartStopProtection = (LinearLayout) bodyView.findViewById(R.id.start_protection_layout);
         startStopProtectionButton = (BootstrapButton) bodyView.findViewById(R.id.start_stop_protection_button);
 
-        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startProtection(); // when user click on this button , the protection is started.
-
-            }
-        });
+        startStopProtectionButton.setOnClickListener(this);
         startStopProtectionButton.setEnabled(false); // will be true when user connect the App to a PandwaRF.
         viewPager = (ViewPager) bodyView.findViewById(R.id.guardian_view_pager); // view pager store two layout (Settings layout & History layout)
         CustomPagerAdapter customPagerAdapter = new CustomPagerAdapter(this.getContext(), viewPager);
@@ -166,22 +211,26 @@ public class GuardianFragment extends Fragment {
                         }).show();
             }
         });
+
         viewPager.setAdapter(customPagerAdapter);
         viewPager.setOffscreenPageLimit(customPagerAdapter.getCount());
         refreshCurrentConfiguration();
         return bodyView;
     }
 
+    ///////////////// CONFIGURATION
     /**
      * Set all widgets from the given Configuration values, this Configuration was loaded.
      * @param configuration
      */
     private void setCurrentConfiguration(Configuration configuration) {
+        Logger.d(TAG, "setCurrentConfiguration():");
+        Logger.d(TAG, "setCurrentConfiguration: " + configuration.toString());
+        currentConfiguration = configuration;
         this.frequencyEditText.setText(String.valueOf(configuration.getFrequency()));
         this.dbToleranceEditText.setText(String.valueOf(configuration.getDbTolerance()));
-        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-        customPagerAdapter.getSettingsSubView().setPeakTolerance(configuration.getPeakTolerance());
-        customPagerAdapter.getSettingsSubView().setMarginError(configuration.getMarginError());
+        setPeakTolerance(configuration.getPeakTolerance());
+        setMarginError(configuration.getMarginError());
     }
 
     /**
@@ -195,11 +244,13 @@ public class GuardianFragment extends Fragment {
         if (Tools.isValidDb(dbToleranceEditText.getText().toString())) {
             currentConfiguration.setDbTolerance(Integer.valueOf(dbToleranceEditText.getText().toString()));
         }
-        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-        currentConfiguration.setPeakTolerance(customPagerAdapter.getSettingsSubView().getPeakTolerance());
-        currentConfiguration.setMarginError(customPagerAdapter.getSettingsSubView().getMarginError());
+
+        currentConfiguration.setPeakTolerance(getPeakTolerance());
+        currentConfiguration.setMarginError(getMargingError());
     }
 
+
+    ///////////////// Protection
     /**
      * Start protection, check if frequency && decibel values are regular.
      * If not a toast will be showed.
@@ -207,6 +258,7 @@ public class GuardianFragment extends Fragment {
      * Otherwise an event "START_PROTECTION" will be sent to the main activity.
      */
     private void startProtection() {
+
         if (!Tools.isValidDb(dbToleranceEditText.getText().toString()) ||
                 !Tools.isValidFrequency(frequencyEditText.getText().toString())) {
             Toast toast = Toast.makeText(getContext(), "wrong parameters", Toast.LENGTH_SHORT);
@@ -215,6 +267,7 @@ public class GuardianFragment extends Fragment {
             return;
         }
         refreshCurrentConfiguration();
+        progressBarPandwarfRunning.setVisibility(View.VISIBLE);
         startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.warningColor)); // warning color
         startStopProtectionButton.setText(R.string.stop_protection_text_button); // change text value
         HashMap<String, String> parameters = new HashMap<>(); // parameters will contains the frequency, db, peak tolerance & margin error values.
@@ -235,32 +288,6 @@ public class GuardianFragment extends Fragment {
     }
 
     /**
-     * Returns value of the "peak tolerance" seekbar
-     * @return
-     */
-    private int getPeakTolerance() {
-        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-        SettingsSubView settingsSubView = customPagerAdapter.getSettingsSubView();
-        return settingsSubView.getPeakTolerance();
-    }
-
-    private void addLog(HistoryLog.WARNING_LEVEL level, String message) {
-        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-        HistoryLog historyLog = new HistoryLog(level, Tools.getCurrentTime(), message);
-        customPagerAdapter.getHistorySubView().addLog(historyLog);
-    }
-
-    /**
-     * Returns value of the "margin error" seekbar
-     * @return
-     */
-    private int getMargingError() {
-        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-        SettingsSubView settingsSubView = customPagerAdapter.getSettingsSubView();
-        return settingsSubView.getMarginError();
-    }
-
-    /**
      * Reset the fragment and send "STOP_PROTECTION" event to the mainActivity.
      */
     private void stopProtection() {
@@ -268,13 +295,69 @@ public class GuardianFragment extends Fragment {
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
     }
 
+    private void startScan() {
+        refreshCurrentConfiguration();
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put(Parameter.FREQUENCY.toString(), String.valueOf(currentConfiguration.getFrequency()));
+        startStopProtectionButton.setText("Stop Scan");
+
+        startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.bootstrap_brand_danger));
+        progressBarPandwarfRunning.setVisibility(View.VISIBLE);
+        EventBus.getDefault().postSticky(new ActionEvent(Action.START_FAST_PROTECTION_ANALYZER, parameters));
+    }
+
+    private void stopScan() {
+        resetFragment();
+        EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_FAST_PROTECTION_ANALYZER, ""));
+    }
+
+    ///////////////// GETTER/SETTER
+    /**
+     * Returns value of the "peak tolerance" seekbar
+     * @return
+     */
+    private int getPeakTolerance() {
+        return tolerance;
+    }
+
+
+    public void setPeakTolerance(int peakTolerance) {
+        this.seekBarTolerance.setProgress(peakTolerance);
+    }
+
+    /**
+     * Returns value of the "margin error" seekbar
+     * @return
+     */
+    private int getMargingError() {
+        return marginError;
+    }
+
+    /**
+     * @param marginError
+     */
+    public void setMarginError(int marginError) {
+        this.seekBarMarginError.setProgress(marginError);
+    }
+
+
+    private void addLog(HistoryLog.WARNING_LEVEL level, String message) {
+        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
+        HistoryLog historyLog = new HistoryLog(level, Tools.getCurrentTime(), message);
+        customPagerAdapter.getHistorySubView().addLog(historyLog);
+    }
+
+
     /**
      * Reset color, text, and OnClick callback of startStopProtectionButton button
      *
      */
     private void resetFragment() {
+        Logger.d(TAG, "resetFragment():");
         startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.successColor)); // success color
         startStopProtectionButton.setText(R.string.start_protection_text_button);
+        progressBarPandwarfRunning.setVisibility(View.INVISIBLE);
+        currentState = NO_PROCESS_ON_RUN;
         startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -301,6 +384,58 @@ public class GuardianFragment extends Fragment {
         } else {
             frequencyChangeEventReceived = false;
         }
+    }
+
+    @Override
+    public void onClick(View view) {
+        Logger.d(TAG, "onClick");
+        if (view == startStopProtectionButton) {
+            Logger.d(TAG, "onClick: mButtonScanProtection");
+            if (currentState == NO_PROCESS_ON_RUN && !checkBoxAdvancedMode.isChecked()) {
+                if (checkBoxAdvancedMode.isChecked()) {
+                    Logger.d(TAG, "onClick: startProtection");
+                    startProtection(); // when user click on this button , the protection is started.
+                } else {
+                    new MaterialDialog.Builder(getContext())
+                            .title("Protection")
+                            .content("Use the current parameters ? ")
+                            .positiveText("Yes")
+                            .negativeText("No, check for me the best parameters")
+                            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                @Override
+                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                    // Yes
+                                    Logger.d(TAG, "onClick: startProtection");
+                                    currentState = PROTECTION_ON_RUN;
+                                    startProtection();
+                                }
+                            })
+                            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                @Override
+                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                    // No
+                                    Logger.d(TAG, "onClick: startScan");
+                                    currentState = SCAN_ON_RUN;
+                                    startScan();
+                                }
+                            }).show();
+                }
+            }  else if (currentState == NO_PROCESS_ON_RUN && checkBoxAdvancedMode.isChecked()){
+                Logger.d(TAG, "onClick: startProtection");
+                currentState = PROTECTION_ON_RUN;
+                startProtection();
+            } else if (currentState == SCAN_ON_RUN) {
+                Logger.d(TAG, "onClick: stopScan");
+                currentState = NO_PROCESS_ON_RUN;
+                stopScan();
+            } else if (currentState == PROTECTION_ON_RUN) {
+                Logger.d(TAG, "onClick: stopProtection");
+                currentState = NO_PROCESS_ON_RUN;
+                stopProtection();
+            }
+        }
+
+
     }
 
     /**
@@ -351,6 +486,18 @@ public class GuardianFragment extends Fragment {
                 break;
             }
 
+            case FAST_PROTECTION_ANALYZER_DONE: {
+                Logger.d(TAG, "event: FAST_PROTECTION_ANALYZER_DONE");
+                String configurationSerialized = stateEvent.getParameters().getString(Parameter.CONFIGURATION.toString());
+                Configuration configuration = new Gson().fromJson(configurationSerialized, Configuration.class);
+                if (configuration != null) {
+                    setCurrentConfiguration(configuration);
+                    resetFragment();
+                    startProtection();
+                }
+                break;
+            }
+
             /**
              * Event from Main2Activity {@link Main2Activity}
              */
@@ -382,5 +529,37 @@ public class GuardianFragment extends Fragment {
                 break;
             }
         }
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+        switch (seekBar.getId()) {
+            case R.id.tolerance_seekbar: {
+                tolerance = i;
+                toleranceTextView.setText("Tolerance: " + tolerance + "%");
+                break;
+            }
+            case R.id.margin_error_seekbar: {
+                marginError = i;
+                marginErrorTextView.setText("Margin error : " + marginError + "%");
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    protected enum GuardianState {
+        NO_PROCESS_ON_RUN,
+        SCAN_ON_RUN,
+        PROTECTION_ON_RUN;
     }
 }

@@ -19,7 +19,7 @@ import com.example.aventador.protectalarm.R;
  * sub views are instanciated by calling "instantiate(LayoutInflater inflater, ViewGroup viewGroup)"
  * instantiate is like an onCreateView...
  */
-public abstract class GuardianSubView implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
+public abstract class GuardianSubView implements View.OnClickListener {
     private int layoutResId;
     private String title;
     protected View layout;
