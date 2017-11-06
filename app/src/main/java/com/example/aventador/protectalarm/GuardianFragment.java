@@ -266,6 +266,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             toast.show();
             return;
         }
+        currentState = PROTECTION_ON_RUN;
         refreshCurrentConfiguration();
         progressBarPandwarfRunning.setVisibility(View.VISIBLE);
         startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.warningColor)); // warning color
@@ -296,6 +297,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
     }
 
     private void startScan() {
+        currentState = SCAN_ON_RUN;
         refreshCurrentConfiguration();
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(Parameter.FREQUENCY.toString(), String.valueOf(currentConfiguration.getFrequency()));
@@ -406,7 +408,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                     // Yes
                                     Logger.d(TAG, "onClick: startProtection");
-                                    currentState = PROTECTION_ON_RUN;
                                     startProtection();
                                 }
                             })
@@ -415,22 +416,18 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                     // No
                                     Logger.d(TAG, "onClick: startScan");
-                                    currentState = SCAN_ON_RUN;
                                     startScan();
                                 }
                             }).show();
                 }
             }  else if (currentState == NO_PROCESS_ON_RUN && checkBoxAdvancedMode.isChecked()){
                 Logger.d(TAG, "onClick: startProtection");
-                currentState = PROTECTION_ON_RUN;
                 startProtection();
             } else if (currentState == SCAN_ON_RUN) {
                 Logger.d(TAG, "onClick: stopScan");
-                currentState = NO_PROCESS_ON_RUN;
                 stopScan();
             } else if (currentState == PROTECTION_ON_RUN) {
                 Logger.d(TAG, "onClick: stopProtection");
-                currentState = NO_PROCESS_ON_RUN;
                 stopProtection();
             }
         }
