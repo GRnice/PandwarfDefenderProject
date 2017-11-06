@@ -1,6 +1,7 @@
 package com.example.aventador.protectalarm.storage;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,7 +33,7 @@ import java.io.PrintWriter;
  * It use Gson library to serialize/deserialize the differents configs.
  * It use a FilePicker from android arsenal to select a config.
  */
-public class FileManager {
+public class FileManager implements ISharedPreferencesManager {
     private final static String TAG = "FileManager";
     private static FileManager instance;
     private Gson gson;
@@ -165,5 +166,47 @@ public class FileManager {
             }
         });
         filePickerDialog.show();
+    }
+
+    /**
+     * Indicates if Shared Preferences contains this key in memory.
+     * @param context
+     * @param key
+     * @return
+     */
+    public boolean fromSharedPrefsContains(Context context, String key) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(context.getString(R.string.shared_prefs_key), Context.MODE_PRIVATE);
+        return sharedPreferences.contains(key);
+    }
+
+    /**
+     * Returns a string linked to the given key.
+     * If no link found null is returned.
+     * @param context
+     * @param key
+     * @return
+     */
+    @Nullable
+    @Override
+    public String fromSharedPrefsGet(Context context, String key) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(context.getString(R.string.shared_prefs_key), Context.MODE_PRIVATE);
+        if (fromSharedPrefsContains(context, key)) {
+            return sharedPreferences.getString(key, null);
+        }
+        return null;
+    }
+
+    /**
+     * Returns true if value is successfully stored, false otherwise.
+     * @param context
+     * @param key
+     * @param value
+     * @return
+     */
+    @Override
+    public boolean fromSharedPrefsPut(Context context, String key, String value) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(context.getString(R.string.shared_prefs_key), Context.MODE_PRIVATE);
+        sharedPreferences.edit().putString(key, value).commit(); // commit and not apply because just after I check if value is successfully stored.
+        return fromSharedPrefsContains(context, key);
     }
 }
