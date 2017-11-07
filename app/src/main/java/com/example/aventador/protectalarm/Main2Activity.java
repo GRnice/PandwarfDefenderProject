@@ -267,11 +267,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
 
     @Override
     public void onPageSelected(int position) {
-        if (position == 0) {
-            this.fab.show();
-        } else {
-            this.fab.hide();
-        }
+        this.fab.hide();
     }
 
     @Override
