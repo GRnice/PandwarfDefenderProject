@@ -275,6 +275,12 @@ public class ThresholdFragment extends Fragment {
             case SEARCH_OPTIMAL_PEAK_DONE: {
                 resetFragment();
                 String rssi = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
+                if (Integer.valueOf(rssi) == Integer.MIN_VALUE) {
+                    Logger.e(TAG, "average signal value not coherent");
+                    // Go to DiscoveryThread. MIN_VALUE is returned when the pandwarf has not transmitted any value.
+                    rssiTextView.setText(getString(R.string.rssi_text_view) + " Error");
+                    return;
+                }
                 rssiTolerance = rssi;
                 rssiTextView.setText(getString(R.string.rssi_text_view) + rssi);
                 break;

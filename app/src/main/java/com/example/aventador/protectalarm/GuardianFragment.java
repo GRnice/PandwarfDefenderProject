@@ -526,7 +526,13 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
              */
             case SEARCH_OPTIMAL_PEAK_DONE: {
                 Logger.d(TAG, "event: SEARCH_OPTIMAL_PEAK_DONE");
+
                 String dbTolerance  = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
+                if (Integer.valueOf(dbTolerance) == Integer.MIN_VALUE) {
+                    Logger.e(TAG, "average signal value not coherent");
+                    // Go to DiscoveryThread. MIN_VALUE is returned when the pandwarf has not transmitted any value.
+                    return;
+                }
                 this.dbToleranceEditText.setText(dbTolerance);
                 break;
             }

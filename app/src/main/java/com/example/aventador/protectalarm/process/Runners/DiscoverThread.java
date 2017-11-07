@@ -78,8 +78,16 @@ public class DiscoverThread extends Runner {
         for (Integer means : allMeans) {
             meansOfAllSequences += means;
         }
-        int meanFinal = meansOfAllSequences / allMeans.size();
-        Logger.d(TAG, "meanFinal is : " + meanFinal);
-        cbDone.done(meanFinal);
+
+        if (allMeans.size() == 0) {
+            Logger.e(TAG, "Impossible to estimates the average signal value");
+            cbDone.done(Integer.MIN_VALUE);
+
+        } else {
+            int meanFinal = meansOfAllSequences / allMeans.size();
+            Logger.d(TAG, "meanFinal is : " + meanFinal);
+            cbDone.done(meanFinal);
+        }
+
     }
 }
