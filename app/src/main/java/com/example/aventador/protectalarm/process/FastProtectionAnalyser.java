@@ -172,7 +172,7 @@ class FastProtectionAnalyser {
              */
             Logger.d(TAG, "guardianIsDone: status == INCREASE_DB: End of process");
             configuration.setDbTolerance(getCurrentDbTolerance() + DB_STEP_INCREASE);
-            Logger.d(TAG, "guardianIsDone: db tolerance: " + getCurrentDbTolerance());
+            Logger.d(TAG, "guardianIsDone: db tolerance: " + configuration.getDbTolerance());
             run.set(false);
             cbConfigFound.done(true, configuration);
             return;
