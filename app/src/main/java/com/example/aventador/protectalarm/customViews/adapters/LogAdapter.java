@@ -17,11 +17,10 @@ import java.util.List;
 
 
 /**
- * Used by HistorySubView.class {@link com.example.aventador.protectalarm.customViews.HistorySubView }
+ * Used by GuardianFragment.class {@link com.example.aventador.protectalarm.GuardianFragment }
  * LogAdapter store many HistoryLog, where each HistoryLog contains differentes informations "date", "message"...
  * {@link HistoryLog}
  *
- * This adapter is associated to the listView of guardian_history.xml
  */
 
 public class LogAdapter extends ArrayAdapter<HistoryLog> {

@@ -46,7 +46,7 @@
             android:layout_height="match_parent"
             android:inputType="text"
             android:text="EC:5A:4E:57:AD:99"
-            android:textColor="@color/bootstrap_brand_secondary_text"
+            android:textColor="@android:color/background_dark"
             android:ems="10"
             android:id="@+id/addressMacEditText"
             android:layout_weight="5" />
@@ -58,6 +58,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/connection_button"
+        android:textColor="@color/colorWhite"
+        android:theme="@style/ButtonMaterialDesignPandwarfAction"
         android:layout_weight="1" />
 
 </LinearLayout>

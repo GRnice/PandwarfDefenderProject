@@ -6,8 +6,7 @@ package com.example.aventador.protectalarm.customViews;
 
 /**
  * HistoryLog is a message containing date, message and a warning level.
- * It used by Guardian fragment when a event must be added to the history sub view.
- * All HistoryLog objects are stored into the LogAdapter {@link com.example.aventador.protectalarm.customViews.adapters.LogAdapter}
+ * It used by Guardian fragment when a event must be added to the list of logs.
  */
 public class HistoryLog {
     public enum WARNING_LEVEL {

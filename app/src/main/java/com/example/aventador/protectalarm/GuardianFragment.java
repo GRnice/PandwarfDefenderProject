@@ -1,10 +1,11 @@
 package com.example.aventador.protectalarm;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -12,6 +13,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -23,12 +25,12 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.beardedhen.androidbootstrap.BootstrapButton;
+import com.afollestad.materialdialogs.simplelist.MaterialSimpleListAdapter;
+import com.afollestad.materialdialogs.simplelist.MaterialSimpleListItem;
 import com.comthings.gollum.api.gollumandroidlib.GollumException;
-import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetGeneric;
-import com.example.aventador.protectalarm.customViews.CustomPagerAdapter;
 import com.example.aventador.protectalarm.customViews.HistoryLog;
+import com.example.aventador.protectalarm.customViews.adapters.LogAdapter;
 import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
@@ -44,6 +46,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.NO_PROCESS_ON_RUN;
@@ -60,7 +63,8 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
     private boolean frequencyChangeEventReceived;
 
     private LinearLayout layoutStartStopProtection;
-    private BootstrapButton startStopProtectionButton;
+    private Button showHistoryButton;
+    private Button startStopProtectionButton;
 
     private TextView frequencyTextView;
     private EditText frequencyEditText;
@@ -77,11 +81,9 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
 
     private ProgressBar progressBarPandwarfRunning;
 
-    private ViewPager viewPager;
     private Configuration currentConfiguration;
 
-    private final int SETTINGS_PAGE = 0;
-    private final int HISTORY_PAGE = 1;
+    private ArrayList<HistoryLog> historyLogArrayList;
 
 
     public GuardianFragment() {
@@ -109,6 +111,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         // -------------------- //
         currentConfiguration = new Configuration(); // contains values of frequency, dbTolerance, peak tolerance & margin error.
         frequencyChangeEventReceived = false;
+        historyLogArrayList = new ArrayList<>();
         currentState = NO_PROCESS_ON_RUN;
         frequencyTextView = (TextView) bodyView.findViewById(R.id.frequency_guardian_textview);
         frequencyEditText = (EditText) bodyView.findViewById(R.id.frequency_guardian_edittext);
@@ -155,21 +158,27 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             }
         });
 
+        showHistoryButton = (Button) bodyView.findViewById(R.id.history_protection_button);
+        showHistoryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showHistory();
+            }
+        });
+
         progressBarPandwarfRunning = (ProgressBar) bodyView.findViewById(R.id.pandwarf_running_progressbar);
         progressBarPandwarfRunning.setIndeterminate(true);
         progressBarPandwarfRunning.setVisibility(View.INVISIBLE);
 
         layoutStartStopProtection = (LinearLayout) bodyView.findViewById(R.id.start_protection_layout);
-        startStopProtectionButton = (BootstrapButton) bodyView.findViewById(R.id.start_stop_protection_button);
+        startStopProtectionButton = (Button) bodyView.findViewById(R.id.start_stop_protection_button);
 
         startStopProtectionButton.setOnClickListener(this);
         startStopProtectionButton.setEnabled(false); // will be true when user connect the App to a PandwaRF.
-        viewPager = (ViewPager) bodyView.findViewById(R.id.guardian_view_pager); // view pager store two layout (Settings layout & History layout)
-        CustomPagerAdapter customPagerAdapter = new CustomPagerAdapter(this.getContext(), viewPager);
-        customPagerAdapter.getSettingsSubView().setOnLoadConfig(new GollumCallbackGetBoolean() {
-            // When user want to load a session.
+        Button loadButton = (Button) bodyView.findViewById(R.id.load_configuration_button);
+        loadButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void done(boolean b) {
+            public void onClick(View view) {
                 FileManager.getInstance().load(getContext(), new GollumCallbackGetGeneric<Configuration>() {
                     @Override
                     public void done(Configuration configuration, GollumException e) {
@@ -185,10 +194,10 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             }
         });
 
-        customPagerAdapter.getSettingsSubView().setOnSaveConfig(new GollumCallbackGetBoolean() {
-            // When user want to store a session.
+        Button saveButton = (Button) bodyView.findViewById(R.id.save_configuration_button);
+        saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void done(boolean b) {
+            public void onClick(View view) {
                 refreshCurrentConfiguration(); // force refresh of the object currentConfiguration.
                 new MaterialDialog.Builder(getContext())
                         .title(R.string.dialog_title_config_save)
@@ -212,10 +221,33 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             }
         });
 
-        viewPager.setAdapter(customPagerAdapter);
-        viewPager.setOffscreenPageLimit(customPagerAdapter.getCount());
         refreshCurrentConfiguration();
         return bodyView;
+    }
+
+    private void showHistory() {
+        new AlertDialog.Builder(getContext())
+                .setTitle("History")
+                .setNeutralButton("Clear", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        historyLogArrayList.clear();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setAdapter(new LogAdapter(getContext(), 0, historyLogArrayList), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                })
+                .create().show();
     }
 
     ///////////////// CONFIGURATION
@@ -269,7 +301,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         currentState = PROTECTION_ON_RUN;
         refreshCurrentConfiguration();
         progressBarPandwarfRunning.setVisibility(View.VISIBLE);
-        startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.warningColor)); // warning color
         startStopProtectionButton.setText(R.string.stop_protection_text_button); // change text value
         HashMap<String, String> parameters = new HashMap<>(); // parameters will contains the frequency, db, peak tolerance & margin error values.
 
@@ -303,7 +334,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         parameters.put(Parameter.FREQUENCY.toString(), String.valueOf(currentConfiguration.getFrequency()));
         startStopProtectionButton.setText("Stop Scan");
 
-        startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.bootstrap_brand_danger));
         progressBarPandwarfRunning.setVisibility(View.VISIBLE);
         EventBus.getDefault().postSticky(new ActionEvent(Action.START_FAST_PROTECTION_ANALYZER, parameters));
     }
@@ -344,9 +374,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
 
 
     private void addLog(HistoryLog.WARNING_LEVEL level, String message) {
-        CustomPagerAdapter customPagerAdapter = (CustomPagerAdapter) viewPager.getAdapter();
-        HistoryLog historyLog = new HistoryLog(level, Tools.getCurrentTime(), message);
-        customPagerAdapter.getHistorySubView().addLog(historyLog);
+        historyLogArrayList.add(new HistoryLog(level, Tools.getCurrentTime(), message));
     }
 
 
@@ -356,7 +384,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
      */
     private void resetFragment() {
         Logger.d(TAG, "resetFragment():");
-        startStopProtectionButton.setBackgroundColor(getResources().getColor(R.color.successColor)); // success color
         startStopProtectionButton.setText(R.string.start_protection_text_button);
         progressBarPandwarfRunning.setVisibility(View.INVISIBLE);
         currentState = NO_PROCESS_ON_RUN;
@@ -366,14 +393,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                 startProtection();
             }
         });
-    }
-
-    /**
-     * Indicate if the sub view showed is the history page.
-     * @return
-     */
-    private boolean historyViewIsShow() {
-        return viewPager.getCurrentItem() == HISTORY_PAGE; // PAGE 1 is the historic view
     }
 
     private void frequencyChanged() {
@@ -394,10 +413,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         if (view == startStopProtectionButton) {
             Logger.d(TAG, "onClick: mButtonScanProtection");
             if (currentState == NO_PROCESS_ON_RUN && !checkBoxAdvancedMode.isChecked()) {
-                if (checkBoxAdvancedMode.isChecked()) {
-                    Logger.d(TAG, "onClick: startProtection");
-                    startProtection(); // when user click on this button , the protection is started.
-                } else {
                     new MaterialDialog.Builder(getContext())
                             .title("Protection")
                             .content("Use the current parameters ? ")
@@ -419,7 +434,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                                     startScan();
                                 }
                             }).show();
-                }
             }  else if (currentState == NO_PROCESS_ON_RUN && checkBoxAdvancedMode.isChecked()){
                 Logger.d(TAG, "onClick: startProtection");
                 startProtection();
@@ -511,9 +525,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             case ATTACK_DETECTED: {
                 Logger.d(TAG, "event: ATTACK_DETECTED");
                 addLog(HistoryLog.WARNING_LEVEL.HIGH, "Attack detected");
-                if (!historyViewIsShow()) {
-                    viewPager.setCurrentItem(HISTORY_PAGE);
-                }
                 break;
             }
 

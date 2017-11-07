@@ -17,4 +17,27 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="ButtonMaterialDesignPandwarfAction" parent="Theme.AppCompat.Light">
+        <item name="colorControlHighlight">@color/colorPrimaryDark</item>
+        <item name="colorButtonNormal">@color/colorPrimary</item>
+    </style>
+
+    <style name="FlatButtonMaterialDesignPandwarfAction" parent="Theme.AppCompat.Light">
+        <item name="colorControlHighlight">@color/colorPrimaryDark</item>
+    </style>
+
+    <style name="ButtonMaterialDesignSalmon" parent="Theme.AppCompat.Light">
+        <item name="colorControlHighlight">@color/colorSalmon</item>
+        <item name="colorButtonNormal">@color/colorLightSalmon</item>
+    </style>
+
+    <style name="CheckBoxMaterialDesign" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:colorControlActivated">@color/colorPrimary</item>
+        <item name="android:colorControlHighlight">@color/colorPrimaryDark</item>
+    </style>
+
+    <style name="SeekBarMaterialDesign" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressTint">@color/colorPrimaryDark</item>
+    </style>
+
 </resources>

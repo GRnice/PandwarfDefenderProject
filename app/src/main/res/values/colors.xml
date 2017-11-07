@@ -2,7 +2,10 @@
 <resources>
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorWhite">#FFFFFFFF</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorSalmon">#FFFF5251</color>
+    <color name="colorLightSalmon">#FFFF5288</color>
     <color name="successColor">#FF5CB85C</color>
     <color name="warningColor">#FFD9534F</color>
 </resources>

@@ -1,181 +1,204 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.example.aventador.protectalarm.GuardianFragment"
-    android:weightSum="10">
+    tools:context="com.example.aventador.protectalarm.GuardianFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="4.5"
-        android:orientation="vertical"
-        android:weightSum="25">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="5"
-            android:orientation="horizontal"
-            android:weightSum="10">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/frequency_guardian_textview"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="5"
-                android:gravity="center_vertical"
-                android:text="Frequency :"
-                android:textSize="18sp" />
 
-            <EditText
-                android:id="@+id/frequency_guardian_edittext"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="5"
-                android:ems="10"
-                android:inputType="numberSigned"
-                android:text="433800000" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/frequency_guardian_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:text="Frequency :"
+                    android:textSize="18sp" />
+
+                <EditText
+                    android:id="@+id/frequency_guardian_edittext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="numberSigned"
+                    android:text="433800000" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="20px">
+
+                <TextView
+                    android:id="@+id/db_tolerance_guardian_textview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:text="DB tolerance :"
+                    android:textSize="18sp" />
+
+                <EditText
+                    android:id="@+id/dbtolerance_guardian_edittext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="numberSigned" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="30px"
+                android:weightSum="10">
+
+                <TextView
+                    android:id="@+id/tolerance_textview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:gravity="center_vertical|fill_vertical"
+                    android:text="Tolerance :"
+                    android:textColor="#FF000000"
+                    android:textSize="18sp" />
+
+                <SeekBar
+                    android:id="@+id/tolerance_seekbar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10px"
+                    android:layout_weight="7"
+                    android:theme="@style/SeekBarMaterialDesign" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="30px"
+                android:weightSum="10">
+
+                <TextView
+                    android:id="@+id/margin_error_textview"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:text="Margin error :"
+                    android:textColor="#FF000000"
+                    android:textSize="18sp" />
+
+                <SeekBar
+                    android:id="@+id/margin_error_seekbar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10px"
+                    android:layout_weight="7"
+                    android:max="30"
+                    android:theme="@style/SeekBarMaterialDesign" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="30px">
+
+                <CheckBox
+                    android:id="@+id/advanced_mode_checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Advanced mode"
+                    android:textSize="16dp"
+                    android:theme="@style/CheckBoxMaterialDesign" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="40px"
+                android:weightSum="10">
+
+                <Button
+                    android:id="@+id/load_configuration_button"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="3"
+                    android:text="Load"
+                    android:textColor="@color/colorWhite"
+                    android:theme="@style/ButtonMaterialDesignSalmon" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4" />
+
+                <Button
+                    android:id="@+id/save_configuration_button"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="3"
+                    android:text="Save"
+                    android:textColor="@color/colorWhite"
+                    android:theme="@style/ButtonMaterialDesignSalmon" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30px"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/history_protection_button"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No attack detected"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:theme="@style/FlatButtonMaterialDesignPandwarfAction" />
+
+                <ProgressBar
+                    android:id="@+id/pandwarf_running_progressbar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/start_protection_layout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="5"
-            android:orientation="horizontal"
-            android:weightSum="10">
+            android:layout_weight="0.8"
+            android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/db_tolerance_guardian_textview"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="5"
-                android:gravity="center_vertical"
-                android:text="DB tolerance :"
-                android:textSize="18sp" />
-
-            <EditText
-                android:id="@+id/dbtolerance_guardian_edittext"
-                android:layout_width="0dp"
+            <Button
+                android:id="@+id/start_stop_protection_button"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:ems="10"
-                android:inputType="numberSigned" />
+                android:theme="@style/ButtonMaterialDesignPandwarfAction"
+                android:text="Start protection"
+                android:textColor="@color/colorWhite"/>
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="10px"
-            android:layout_weight="5"
-            android:orientation="horizontal"
-            android:weightSum="10">
-
-            <TextView
-                android:id="@+id/tolerance_textview"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:gravity="center_vertical|fill_vertical"
-                android:text="Tolerance :"
-                android:textColor="@color/bootstrap_gray_dark"
-                android:textSize="18sp" />
-
-            <SeekBar
-                android:id="@+id/tolerance_seekbar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10px"
-                android:layout_weight="7" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="5"
-            android:orientation="horizontal"
-            android:weightSum="10">
-
-            <TextView
-                android:id="@+id/margin_error_textview"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="3"
-                android:text="Margin error :"
-                android:textColor="@color/bootstrap_gray_dark"
-                android:textSize="18sp" />
-
-            <SeekBar
-                android:id="@+id/margin_error_seekbar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10px"
-                android:layout_weight="7"
-                android:max="30" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="5"
-            android:orientation="horizontal"
-            android:weightSum="10">
-
-            <CheckBox
-                android:id="@+id/advanced_mode_checkbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Advanced mode" />
-        </LinearLayout>
-
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linearlayout44"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.2"
-        android:background="@color/bootstrap_alert_cross_default"
-        android:orientation="horizontal">
-
-    </LinearLayout>
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/guardian_view_pager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="4.3"
-        android:visibility="visible" >
-
-    </android.support.v4.view.ViewPager>
-
-    <ProgressBar
-        android:id="@+id/pandwarf_running_progressbar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.2" />
-
-    <LinearLayout
-        android:id="@+id/start_protection_layout"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.8"
-        android:orientation="horizontal">
-
-        <com.beardedhen.androidbootstrap.BootstrapButton
-            android:id="@+id/start_stop_protection_button"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="Start protection"
-            app:bootstrapBrand="success"
-            app:bootstrapSize="lg"
-            app:buttonMode="regular"
-            app:roundedCorners="true"
-            app:showOutline="false" />
-    </LinearLayout>
-
-</LinearLayout>
+</ScrollView>
