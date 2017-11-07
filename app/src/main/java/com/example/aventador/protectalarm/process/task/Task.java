@@ -145,6 +145,7 @@ abstract class Task extends Thread {
                 Integer.valueOf(dbTolerance), peakTolerance, marginError, cbStartDone, new GollumCallbackGetBoolean() {
                     @Override
                     public void done(boolean b) {
+                        // When an brute force attack is detected...
                         HashMap<String, String> parametersAttackDetected = new HashMap<>();
                         parametersAttackDetected.put(Parameter.DATE.toString(), Tools.getCurrentTime());
                         EventBus.getDefault().postSticky(new StateEvent(ATTACK_DETECTED, parametersAttackDetected));

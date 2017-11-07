@@ -40,7 +40,9 @@ import java.util.HashMap;
 
 import static android.view.View.GONE;
 
-
+/**
+ * Used to calculate the value of the average signal in dB
+ */
 public class ThresholdFragment extends Fragment {
 
     private static final String TAG = "ThresholdFragment";
@@ -137,7 +139,7 @@ public class ThresholdFragment extends Fragment {
      */
     private void startSearchOptimalThreshold() {
         progressBarSearchOptimalThreshold.setVisibility(View.VISIBLE);
-        searchOptimalThresholdButton.setText("Stop Searching");
+        searchOptimalThresholdButton.setText(getString(R.string.button_threshold_text_stop));
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -173,7 +175,7 @@ public class ThresholdFragment extends Fragment {
      */
     private void showDialogDbTolerance() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Set db tolerance (for experimented user)");
+        builder.setTitle("Set dB (for experimented user)");
 
         // Set up the input
         final EditText input = new EditText(getContext());
@@ -186,7 +188,7 @@ public class ThresholdFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 rssiTolerance = input.getText().toString();
-                rssiTextView.setText("Threshold: " + rssiTolerance);
+                rssiTextView.setText(getString(R.string.rssi_text_view) + rssiTolerance);
                 HashMap<String, String> parameters = new HashMap<String, String>();
                 parameters.put(Parameter.RSSI_VALUE.toString(), rssiTolerance);
                 EventBus.getDefault().postSticky(new StateEvent(State.DB_TOLERANCE_SELECTED, parameters));
@@ -210,7 +212,7 @@ public class ThresholdFragment extends Fragment {
      *
      */
     public void resetFragment() {
-        searchOptimalThresholdButton.setText("Search Optimal Threshold");
+        searchOptimalThresholdButton.setText(getString(R.string.button_threshold_text_start));
         progressBarSearchOptimalThreshold.setVisibility(View.GONE);
         searchOptimalThresholdButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -274,7 +276,7 @@ public class ThresholdFragment extends Fragment {
                 resetFragment();
                 String rssi = stateEvent.getParameters().getString(Parameter.RSSI_VALUE.toString());
                 rssiTolerance = rssi;
-                rssiTextView.setText("Threshold: " + rssi);
+                rssiTextView.setText(getString(R.string.rssi_text_view) + rssi);
                 break;
             }
 

@@ -171,8 +171,8 @@ class FastProtectionAnalyser {
                 * But it's a limit, so to prevent a potentiel false alarm we add 2 to the currentDbTolerance   /!\ IT'S ARBITRARY BUT but it does the job ... /!\
              */
             Logger.d(TAG, "guardianIsDone: status == INCREASE_DB: End of process");
-            Logger.d(TAG, "guardianIsDone: db tolerance: " + getCurrentDbTolerance());
             configuration.setDbTolerance(getCurrentDbTolerance() + DB_STEP_INCREASE);
+            Logger.d(TAG, "guardianIsDone: db tolerance: " + getCurrentDbTolerance());
             run.set(false);
             cbConfigFound.done(true, configuration);
             return;

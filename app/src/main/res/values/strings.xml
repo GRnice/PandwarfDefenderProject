@@ -12,11 +12,18 @@
     <string name="root_dir">PandwarfDefender</string>
     <string name="config_dir">configs</string>
 
+    <!-- Threshold fragment -->
+    <string name="button_threshold_text_start">Find average signal </string>
+    <string name="button_threshold_text_stop">Stop Searching </string>
+    <string name="rssi_text_view">Average signal (dB): </string>
+
     <!-- Guardian fragment -->
     <string name="dialog_title_config_save">Save config</string>
     <string name="dialog_content_config_save">Set file name please</string>
     <string name="stop_protection_text_button">Stop protection</string>
     <string name="start_protection_text_button">Start protection</string>
+    <string name="stop_scan_text_button">Stop Scan</string>
+    <string name="no_attack_detected_flat_button">No attacks detected</string>
     <!-- -->
 
 

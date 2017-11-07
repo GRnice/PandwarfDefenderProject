@@ -25,8 +25,6 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.afollestad.materialdialogs.simplelist.MaterialSimpleListAdapter;
-import com.afollestad.materialdialogs.simplelist.MaterialSimpleListItem;
 import com.comthings.gollum.api.gollumandroidlib.GollumException;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetGeneric;
 import com.example.aventador.protectalarm.customViews.HistoryLog;
@@ -229,6 +227,9 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         return bodyView;
     }
 
+    /**
+     * Show dialog with a list of all events during the current protection session
+     */
     private void showHistory() {
         new AlertDialog.Builder(getContext())
                 .setTitle("History")
@@ -307,7 +308,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         historyLogArrayList.clear();
         resetFragment();
         showHistoryButton.setVisibility(View.VISIBLE);
-        showHistoryButton.setText("No attacks detected");
+        showHistoryButton.setText(getString(R.string.no_attack_detected_flat_button));
         currentState = PROTECTION_ON_RUN;
         progressBarPandwarfRunning.setVisibility(View.VISIBLE);
         startStopProtectionButton.setText(R.string.stop_protection_text_button); // change text value
@@ -340,7 +341,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         currentState = SCAN_ON_RUN; // now we are in SCAN_ON_RUN mode.
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(Parameter.FREQUENCY.toString(), String.valueOf(currentConfiguration.getFrequency()));
-        startStopProtectionButton.setText("Stop Scan");
+        startStopProtectionButton.setText(getString(R.string.stop_scan_text_button));
 
         progressBarPandwarfRunning.setVisibility(View.VISIBLE);
         EventBus.getDefault().postSticky(new ActionEvent(Action.START_FAST_PROTECTION_ANALYZER, parameters));

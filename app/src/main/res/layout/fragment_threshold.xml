@@ -44,7 +44,7 @@
         android:focusableInTouchMode="true">
 
         <Button
-            android:text="Search optimal Threshold"
+            android:text="@string/button_threshold_text_start"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:id="@+id/searchOptimalThresholdButton"

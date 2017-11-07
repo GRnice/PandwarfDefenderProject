@@ -74,7 +74,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mSectionsPagerAdapter.addFragment(new HomeFragment(), "Pairing");
-        mSectionsPagerAdapter.addFragment(new ThresholdFragment(), "Threshold Finder");
+        mSectionsPagerAdapter.addFragment(new ThresholdFragment(), "Signal measurement");
         mSectionsPagerAdapter.addFragment(new GuardianFragment(), "Protection");
 
         // Set up the ViewPager with the sections adapter.
