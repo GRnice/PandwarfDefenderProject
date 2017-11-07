@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:id="@+id/row_connection_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimaryDark"
+    android:clickable="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textView444"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="PandwaRF"
+        android:textColor="@color/colorWhite"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/ble_address_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView"
-        android:textSize="18sp" />
+        android:layout_marginBottom="20dp"
+        android:text="xx:xx:xx:xx:xx:xx"
+        android:textColor="@color/colorWhite" />
 </LinearLayout>

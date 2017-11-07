@@ -19,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -109,7 +110,12 @@ public class HomeFragment extends Fragment {
     public void connect(ExtendedBluetoothDevice extendedBluetoothDevice) {
         Logger.d(TAG, "connect");
         if (!Pandwarf.getInstance().isConnected() && connexionInProgress.compareAndSet(false, true)) {
+            pandwarfConnectedTextView.setText("Pairing in progress...");
             GollumDongle.getInstance(getActivity()).openDevice(extendedBluetoothDevice, true, false, new DongleCallbacks());
+        } else {
+            Toast toast = Toast.makeText(getContext(), "Disconnect first the current PandwaRF", Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+            toast.show();
         }
     }
 
@@ -146,6 +152,9 @@ public class HomeFragment extends Fragment {
      */
     private void startScan() {
 
+        /*
+        Check if Bluetooth is enabled !
+         */
         if (BluetoothAdapter.getDefaultAdapter().getState() != BluetoothAdapter.STATE_ON) {
             Toast toast = Toast.makeText(getContext(), "Bluetooth must be started", Toast.LENGTH_SHORT);
             toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
@@ -153,6 +162,16 @@ public class HomeFragment extends Fragment {
             return;
         }
 
+
+        if (!scanIsRunning.compareAndSet(false, true)) {
+            Logger.e(TAG, "scan is already running");
+            return;
+        }
+
+        /*
+        Show the progress bar
+        connectionButton will call "stopScan" if pressed
+         */
         scanProgressbar.setVisibility(View.VISIBLE);
         connectionButton.setText(getString(R.string.stop_scan_pandwarf));
         connectionButton.setOnClickListener(new View.OnClickListener() {
@@ -162,16 +181,21 @@ public class HomeFragment extends Fragment {
             }
         });
 
-
-        if (!scanIsRunning.compareAndSet(false, true)) {
-            Logger.e(TAG, "scan is already running");
-            return;
-        }
+        /*
+        Flush the ListView
+         */
+        ListAdapterCustom listAdapterCustom = ((ListAdapterCustom) listView.getAdapter());
+        listAdapterCustom.clear();
+        listAdapterCustom.notifyDataSetChanged();
 
         Logger.d(TAG, "start search: ");
         GollumDongle.getInstance(getActivity()).searchDevice(new ScannerListener() {
             @Override
             public void onSignalNewDevice(ExtendedBluetoothDevice extendedBluetoothDevice) {
+                /*
+                Called when a new device is detected.
+                Update the listView :)
+                 */
                 Logger.d(TAG, "onSignalNewDevice: " + extendedBluetoothDevice.getAddress());
                 ListAdapterCustom listAdapterCustom = ((ListAdapterCustom) listView.getAdapter());
                 listAdapterCustom.add(extendedBluetoothDevice);
@@ -180,11 +204,16 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onSignalUpdateDevice(ExtendedBluetoothDevice extendedBluetoothDevice) {
-
+                /*
+                Nothing
+                 */
             }
 
             @Override
             public void onSignalEndScan(Exception e) {
+                /*
+                Nothing
+                 */
             }
         });
     }
@@ -252,10 +281,15 @@ public class HomeFragment extends Fragment {
         Logger.d(TAG, "onMessageEvent: State Event: " + stateEvent.getState());
         switch (stateEvent.getState()) {
             case CONNECTED: {
+                /*
+                don't call resetFragment, we are connected.
+                stop scan process.
+                connectionButton will call "disconnect" if clicked
+                */
                 Logger.d(TAG, "CONNECTED");
                 scanProgressbar.setVisibility(GONE);
                 connexionInProgress.set(false);
-                pandwarfConnectedTextView.setText("Pandwarf: " + GollumDongle.getInstance(getActivity()).getCurrentBleDeviceMacAddress());
+                pandwarfConnectedTextView.setText("Connected to " + GollumDongle.getInstance(getActivity()).getCurrentBleDeviceMacAddress());
                 stopScan();
                 connectionButton.setText(getString(R.string.disconnect_pandwarf));
                 connectionButton.setOnClickListener(new View.OnClickListener() {
@@ -267,8 +301,12 @@ public class HomeFragment extends Fragment {
                 break;
             }
             case DISCONNECTED: {
+                /*
+                Pandwarf disconnected. User can connect an other pandwarf to the app
+                All functionnalities are disabled. (excepted pairing)
+                 */
                 Logger.d(TAG, "DISCONNECTED");
-                pandwarfConnectedTextView.setText("Pandwarf:");
+                pandwarfConnectedTextView.setText("No Pandwarf connected");
                 resetFragment();
                 break;
             }
@@ -325,8 +363,8 @@ public class HomeFragment extends Fragment {
                 return view;
             }
             TextView bleAddressTextView = (TextView) view.findViewById(R.id.ble_address_text_view);
-            bleAddressTextView.setText("Pandwarf: " + extendedBluetoothDevice.getAddress().toUpperCase());
-            bleAddressTextView.setOnClickListener(new View.OnClickListener() {
+            bleAddressTextView.setText(extendedBluetoothDevice.getAddress().toUpperCase());
+            view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     connect(extendedBluetoothDevice);
