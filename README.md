@@ -10,26 +10,18 @@ Pandwarf Defender is an Android Application :
 Easy to use..
 you need a PandwaRF : https://pandwarf.com/
 
-__To protect your alarm proceed in three steps only__
+__To protect your alarm proceed in two steps only__
 
-1) Connect the app to your PandwaRF:
+1) Connect the app to your PandwaRF
 
-Image 1
-
-2) analyzes the radio frequencies of the environment
-
-Image 2
-
-3) Protect your alarm !
-
-Image 3
+2) Protect your alarm !
 
 
-You can custom any parameters to improve if necessary.
-(I will explain all parameters later.)
+
+If you want custom any parameters to improve if necessary, check the advanced mode in the page Protection.
+Otherwise the app do the work for you.
+
+__the page "Signal Measurement" evaluates the average signal strength.__
 
 If you have many alarms you can save/load many configurations.
 Configurations are by default stored in *Documents/PandwarfDefender/configs*
-
-Next Iteration:
-Contact a server when a brute force attack is detected :)))
