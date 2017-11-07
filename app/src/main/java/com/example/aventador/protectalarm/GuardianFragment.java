@@ -51,7 +51,9 @@ import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.
 import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.PROTECTION_ON_RUN;
 import static com.example.aventador.protectalarm.GuardianFragment.GuardianState.SCAN_ON_RUN;
 
-
+/**
+ * Manage "Protection" page.
+ */
 public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
 
     private final static String TAG = "GuardianFragment";
@@ -80,9 +82,9 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
 
     private ProgressBar progressBarPandwarfRunning;
 
-    private Configuration currentConfiguration;
+    private Configuration currentConfiguration; // store all widget's values (freq, dbTolerance, peak, margin)
 
-    private ArrayList<HistoryLog> historyLogArrayList;
+    private ArrayList<HistoryLog> historyLogArrayList; // store all events during the current protection session.
 
 
     public GuardianFragment() {
@@ -347,6 +349,9 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         EventBus.getDefault().postSticky(new ActionEvent(Action.START_FAST_PROTECTION_ANALYZER, parameters));
     }
 
+    /**
+     * Stop Fast protection analyzer.
+     */
     private void stopScan() {
         Logger.d(TAG, "stopScan");
         resetFragment();

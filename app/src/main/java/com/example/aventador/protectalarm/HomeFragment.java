@@ -102,13 +102,22 @@ public class HomeFragment extends Fragment {
         EventBus.getDefault().unregister(this);
     }
 
+    /**
+     * called when user select an item in the list view
+     * @param extendedBluetoothDevice
+     */
     public void connect(ExtendedBluetoothDevice extendedBluetoothDevice) {
+        Logger.d(TAG, "connect");
         if (!Pandwarf.getInstance().isConnected() && connexionInProgress.compareAndSet(false, true)) {
             GollumDongle.getInstance(getActivity()).openDevice(extendedBluetoothDevice, true, false, new DongleCallbacks());
         }
     }
 
+    /**
+     * Called when user want to disconnect the pandwarf
+     */
     public void disconnect() {
+        Logger.d(TAG, "disconnect");
         killAllProcess(new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
@@ -124,6 +133,7 @@ public class HomeFragment extends Fragment {
      * stop the scan process.
      */
     private void stopScan() {
+        Logger.d(TAG, "stopScan");
         if (scanIsRunning.compareAndSet(true, false)) {
             resetFragment();
             GollumDongle.getInstance(getActivity()).stopSearchDevice();
@@ -265,6 +275,9 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    /**
+     *
+     */
     private class ListAdapterCustom extends ArrayAdapter<ExtendedBluetoothDevice> {
 
         private List<ExtendedBluetoothDevice> extendedBluetoothDevices;
