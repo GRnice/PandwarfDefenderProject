@@ -110,9 +110,15 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
                             android.Manifest.permission.READ_EXTERNAL_STORAGE,
                     },
                     REQUEST_CODE_ASK_PERMISSIONS);
-            return;
         }
 
+    }
+    @Override
+    @CallSuper
+    public void onDestroy() {
+        super.onDestroy();
+        BluetoothReceiver.getInstance().unregister(this);
+        EventBus.getDefault().unregister(this);
     }
 
     private void newStateDetected(int state) {
@@ -172,13 +178,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
             }
         });
 
-    }
-
-    @Override
-    @CallSuper
-    public void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
 
