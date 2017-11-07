@@ -9,48 +9,51 @@
     tools:context="com.example.aventador.protectalarm.HomeFragment"
     android:weightSum="10">
 
+
     <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
         android:id="@+id/mac_address_layout"
-        android:layout_weight="2"
+        android:layout_width="match_parent"
+
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
         android:weightSum="10">
 
         <ProgressBar
+            android:id="@+id/scan_progressbar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/scan_progressbar"
             android:layout_weight="10" />
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:orientation="horizontal"
         android:weightSum="10">
 
         <TextView
-            android:text="type mac address :"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:id="@+id/addressMacTextView"
-            android:layout_weight="5"
-            android:gravity="center_vertical|center_horizontal"
-            android:textSize="18sp" />
+            android:id="@+id/pandwarf_connected_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:text="Pandwarf" />
+    </LinearLayout>
 
-        <EditText
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:inputType="text"
-            android:text="EC:5A:4E:57:AD:99"
-            android:textColor="@android:color/background_dark"
-            android:ems="10"
-            android:id="@+id/addressMacEditText"
-            android:layout_weight="5" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="7"
+        android:orientation="horizontal"
+        android:weightSum="10">
 
+        <ListView
+            android:id="@+id/pandwarf_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
     </LinearLayout>
 
     <Button

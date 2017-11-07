@@ -23,12 +23,9 @@ import android.widget.Toast;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteger;
 import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
-import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
-import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
 import com.example.aventador.protectalarm.process.Pandwarf;
-import com.example.aventador.protectalarm.process.Scanner;
 import com.example.aventador.protectalarm.process.task.TaskPollManager;
 import com.example.aventador.protectalarm.tools.Logger;
 import com.example.aventador.protectalarm.tools.Recaller;
@@ -152,7 +149,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
      * Kill all process, scan, threshold discovery, protection, jamming, fast protection analyzer
      */
     public void killAllProcess(final GollumCallbackGetBoolean killDone) {
-        Scanner.getInstance().stopConnect(this);
         Pandwarf.getInstance().stopFastProtectionAnalyzer(this, new GollumCallbackGetBoolean() {
             @Override
             public void done(boolean b) {
@@ -201,33 +197,6 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(final ActionEvent actionEvent) {
         switch (actionEvent.getActionRequested()) {
-            case CONNECT: {
-                Scanner scanner = Scanner.getInstance();
-                final String bleAddressTarget = actionEvent.getParameters().getString(Action.CONNECT.toString());
-
-                scanner.connect(this, bleAddressTarget, new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean connected) {
-                    }
-                });
-                break;
-            }
-            case STOP_CONNECT: {
-                Scanner.getInstance().stopConnect(this);
-                break;
-            }
-            case DISCONNECT: {
-                killAllProcess(new GollumCallbackGetBoolean() {
-                    @Override
-                    public void done(boolean b) {
-                        Pandwarf.getInstance().close(Main2Activity.this);
-                        EventBus.getDefault().postSticky(new StateEvent(State.DISCONNECTED, ""));
-                    }
-                });
-                break;
-            }
-
-
             case START_FAST_PROTECTION_ANALYZER:
             case STOP_FAST_PROTECTION_ANALYZER:
             case START_SEARCH_THRESHOLD:
