@@ -78,6 +78,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
     private int marginError = 10; // default value
 
     private CheckBox checkBoxAdvancedMode;
+    private boolean advancedModeEnable = false;
 
     private ProgressBar progressBarPandwarfRunning;
 
@@ -152,9 +153,11 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         checkBoxAdvancedMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                Logger.d(TAG, "onCheckedChanged: checked:" + checked);
                 dbToleranceEditText.setEnabled(checked);
                 seekBarTolerance.setEnabled(checked);
                 seekBarMarginError.setEnabled(checked);
+                advancedModeEnable = checked;
             }
         });
 
@@ -165,6 +168,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                 showHistory();
             }
         });
+        showHistoryButton.setVisibility(View.INVISIBLE);
 
         progressBarPandwarfRunning = (ProgressBar) bodyView.findViewById(R.id.pandwarf_running_progressbar);
         progressBarPandwarfRunning.setIndeterminate(true);
@@ -233,6 +237,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                     public void onClick(DialogInterface dialogInterface, int i) {
                         historyLogArrayList.clear();
                         dialogInterface.dismiss();
+                        showHistoryButton.setText("No attacks detected");
                     }
                 })
                 .setPositiveButton("ok", new DialogInterface.OnClickListener() {
@@ -298,8 +303,12 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             toast.show();
             return;
         }
-        currentState = PROTECTION_ON_RUN;
         refreshCurrentConfiguration();
+        historyLogArrayList.clear();
+        resetFragment();
+        showHistoryButton.setVisibility(View.VISIBLE);
+        showHistoryButton.setText("No attacks detected");
+        currentState = PROTECTION_ON_RUN;
         progressBarPandwarfRunning.setVisibility(View.VISIBLE);
         startStopProtectionButton.setText(R.string.stop_protection_text_button); // change text value
         HashMap<String, String> parameters = new HashMap<>(); // parameters will contains the frequency, db, peak tolerance & margin error values.
@@ -308,12 +317,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         parameters.put(Parameter.RSSI_VALUE.toString(), String.valueOf(currentConfiguration.getDbTolerance()));
         parameters.put(Parameter.PEAK_TOLERANCE.toString(), String.valueOf(currentConfiguration.getPeakTolerance()));
         parameters.put(Parameter.MARGIN_ERROR.toString(), String.valueOf(currentConfiguration.getMarginError()));
-        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopProtection(); // button's behavior changed. now if user click on it, the protection will be stopped.
-            }
-        });
         EventBus.getDefault().postSticky(new ActionEvent(Action.START_PROTECTION, parameters));
         addLog(HistoryLog.WARNING_LEVEL.LOW, "Protection started");
 
@@ -327,9 +330,14 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_PROTECTION, ""));
     }
 
+    /**
+     * Start the process calculating the right parameters.
+     */
     private void startScan() {
-        currentState = SCAN_ON_RUN;
-        refreshCurrentConfiguration();
+        refreshCurrentConfiguration(); // update currentConfiguration object
+        resetFragment(); // reset View
+        showHistoryButton.setVisibility(View.INVISIBLE);
+        currentState = SCAN_ON_RUN; // now we are in SCAN_ON_RUN mode.
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(Parameter.FREQUENCY.toString(), String.valueOf(currentConfiguration.getFrequency()));
         startStopProtectionButton.setText("Stop Scan");
@@ -339,6 +347,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
     }
 
     private void stopScan() {
+        Logger.d(TAG, "stopScan");
         resetFragment();
         EventBus.getDefault().postSticky(new ActionEvent(Action.STOP_FAST_PROTECTION_ANALYZER, ""));
     }
@@ -387,12 +396,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         startStopProtectionButton.setText(R.string.start_protection_text_button);
         progressBarPandwarfRunning.setVisibility(View.INVISIBLE);
         currentState = NO_PROCESS_ON_RUN;
-        startStopProtectionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startProtection();
-            }
-        });
     }
 
     private void frequencyChanged() {
@@ -412,7 +415,8 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         Logger.d(TAG, "onClick");
         if (view == startStopProtectionButton) {
             Logger.d(TAG, "onClick: mButtonScanProtection");
-            if (currentState == NO_PROCESS_ON_RUN && !checkBoxAdvancedMode.isChecked()) {
+            Logger.d(TAG, "onClick: mButtonScanProtection: currentState: -> " + currentState + "; checkBoxAdvancedMode: -> " + checkBoxAdvancedMode.isChecked());
+            if (currentState == NO_PROCESS_ON_RUN && !advancedModeEnable) {
                     new MaterialDialog.Builder(getContext())
                             .title("Protection")
                             .content("Use the current parameters ? ")
@@ -434,7 +438,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                                     startScan();
                                 }
                             }).show();
-            }  else if (currentState == NO_PROCESS_ON_RUN && checkBoxAdvancedMode.isChecked()){
+            }  else if (currentState == NO_PROCESS_ON_RUN && advancedModeEnable){
                 Logger.d(TAG, "onClick: startProtection");
                 startProtection();
             } else if (currentState == SCAN_ON_RUN) {
@@ -497,13 +501,15 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                 break;
             }
 
+            /**
+             * Event from Main2Activity {@link Main2Activity}
+             */
             case FAST_PROTECTION_ANALYZER_DONE: {
                 Logger.d(TAG, "event: FAST_PROTECTION_ANALYZER_DONE");
                 String configurationSerialized = stateEvent.getParameters().getString(Parameter.CONFIGURATION.toString());
                 Configuration configuration = new Gson().fromJson(configurationSerialized, Configuration.class);
                 if (configuration != null) {
                     setCurrentConfiguration(configuration);
-                    resetFragment();
                     startProtection();
                 }
                 break;
@@ -525,6 +531,13 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             case ATTACK_DETECTED: {
                 Logger.d(TAG, "event: ATTACK_DETECTED");
                 addLog(HistoryLog.WARNING_LEVEL.HIGH, "Attack detected");
+                int nbAttacksDetected = 0;
+                for (HistoryLog historyLog : historyLogArrayList) {
+                    if (historyLog.getWarningLevel().equals(HistoryLog.WARNING_LEVEL.HIGH)) {
+                        nbAttacksDetected++;
+                    }
+                }
+                showHistoryButton.setText("" + nbAttacksDetected + " Attacks detected !");
                 break;
             }
 
