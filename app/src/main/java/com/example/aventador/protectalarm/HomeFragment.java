@@ -61,6 +61,7 @@ public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
     private Button connectionButton;
     private AtomicBoolean scanIsRunning;
+    private AtomicBoolean connexionInProgress;
     private ProgressBar scanProgressbar;
     private ListView listView;
     private TextView pandwarfConnectedTextView;
@@ -80,6 +81,7 @@ public class HomeFragment extends Fragment {
         listView = (ListView) bodyView.findViewById(R.id.pandwarf_list_view);
         listView.setAdapter(new ListAdapterCustom(getContext(), 0, new ArrayList<ExtendedBluetoothDevice>()));
         scanIsRunning = new AtomicBoolean(false);
+        connexionInProgress = new AtomicBoolean(false);
         connectionButton = (Button) bodyView.findViewById(R.id.connection_button);
         resetFragment();
 
@@ -101,7 +103,7 @@ public class HomeFragment extends Fragment {
     }
 
     public void connect(ExtendedBluetoothDevice extendedBluetoothDevice) {
-        if (!Pandwarf.getInstance().isConnected()) {
+        if (!Pandwarf.getInstance().isConnected() && connexionInProgress.compareAndSet(false, true)) {
             GollumDongle.getInstance(getActivity()).openDevice(extendedBluetoothDevice, true, false, new DongleCallbacks());
         }
     }
@@ -242,6 +244,7 @@ public class HomeFragment extends Fragment {
             case CONNECTED: {
                 Logger.d(TAG, "CONNECTED");
                 scanProgressbar.setVisibility(GONE);
+                connexionInProgress.set(false);
                 pandwarfConnectedTextView.setText("Pandwarf: " + GollumDongle.getInstance(getActivity()).getCurrentBleDeviceMacAddress());
                 stopScan();
                 connectionButton.setText(getString(R.string.disconnect_pandwarf));
