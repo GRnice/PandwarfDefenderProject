@@ -1,25 +1,17 @@
 package com.example.aventador.protectalarm;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.graphics.Color;
+import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -28,7 +20,6 @@ import android.widget.Toast;
 import com.comthings.gollum.api.gollumandroidlib.GollumDongle;
 import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetBoolean;
 import com.example.aventador.protectalarm.callbacks.DongleCallbacks;
-import com.example.aventador.protectalarm.events.Action;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
@@ -48,7 +39,6 @@ import no.nordicsemi.android.nrftoolbox.scanner.ExtendedBluetoothDevice;
 import no.nordicsemi.android.nrftoolbox.scanner.ScannerListener;
 
 import static android.view.View.GONE;
-import static com.example.aventador.protectalarm.tools.Tools.isValidAddressMac;
 
 /**
  * A placeholder fragment containing a simple view.

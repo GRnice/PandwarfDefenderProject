@@ -30,7 +30,9 @@
     <string name="stop_scan_text_button">Stop Scan</string>
     <string name="no_attack_detected_flat_button">No attacks detected</string>
 
-    <!-- -->
+    <!-- Settings fragment -->
+    <string name="settings_title">Settings</string>
+    <string name="hint_url_settings">Type Url here</string>
 
 
 </resources>

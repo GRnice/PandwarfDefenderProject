@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
@@ -25,6 +26,7 @@ import com.comthings.gollum.api.gollumandroidlib.callback.GollumCallbackGetInteg
 import com.example.aventador.protectalarm.bluetooth.BluetoothReceiver;
 import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.fragments.settings.SettingsFragment;
 import com.example.aventador.protectalarm.process.Pandwarf;
 import com.example.aventador.protectalarm.process.task.TaskPollManager;
 import com.example.aventador.protectalarm.tools.Logger;
@@ -56,7 +58,9 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    private View settingsFragmentLayout;
     private FloatingActionButton fab;
+    private View appBarLayout;
     private int bluetoothState;
 
     @Override
@@ -64,6 +68,7 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 
+        appBarLayout = findViewById(R.id.appbar);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -79,6 +84,8 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mViewPager.setOffscreenPageLimit(mViewPager.getAdapter().getCount());
         mViewPager.addOnPageChangeListener(this);
+
+        settingsFragmentLayout = findViewById(R.id.settings_fragment_layout);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
@@ -188,6 +195,12 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
         return true;
     }
 
+    public void closeSettings() {
+        appBarLayout.setVisibility(View.VISIBLE);
+        mViewPager.setVisibility(View.VISIBLE);
+        settingsFragmentLayout.setVisibility(View.GONE);
+    }
+
     /**
      * Used by EventBus
      * Called when a Publisher send a action to be executed.
@@ -253,6 +266,9 @@ public class Main2Activity extends AppCompatActivity implements ViewPager.OnPage
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            appBarLayout.setVisibility(View.GONE);
+            mViewPager.setVisibility(View.GONE);
+            settingsFragmentLayout.setVisibility(View.VISIBLE);
             return true;
         }
 
