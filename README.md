@@ -1,4 +1,7 @@
 # PandwarfDefenderProject
+
+[Wiki](https://github.com/GRnice/PandwarfDefenderProject/wiki)
+
 Now PandwaRF can also protect your home...
 
 Pandwarf Defender is an Android Application :
@@ -46,3 +49,5 @@ __the page "Signal Measurement" evaluates the average signal strength.__
 
 If you have many alarms you can save/load many configurations.
 Configurations are by default stored in *Documents/PandwarfDefender/configs*
+
+More informations ? Go to [Wiki](https://github.com/GRnice/PandwarfDefenderProject/wiki)
