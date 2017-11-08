@@ -34,6 +34,8 @@ import com.example.aventador.protectalarm.events.ActionEvent;
 import com.example.aventador.protectalarm.events.Parameter;
 import com.example.aventador.protectalarm.events.State;
 import com.example.aventador.protectalarm.events.StateEvent;
+import com.example.aventador.protectalarm.fragments.settings.SettingsHub;
+import com.example.aventador.protectalarm.net.SenderNet;
 import com.example.aventador.protectalarm.storage.Configuration;
 import com.example.aventador.protectalarm.storage.FileManager;
 import com.example.aventador.protectalarm.tools.Logger;
@@ -547,6 +549,10 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                 for (HistoryLog historyLog : historyLogArrayList) {
                     if (historyLog.getWarningLevel().equals(HistoryLog.WARNING_LEVEL.HIGH)) {
                         nbAttacksDetected++;
+                    }
+                    SettingsHub settingsHub = FileManager.getInstance().loadSettings(getContext(), getString(R.string.settings_app_file));
+                    if (settingsHub != null && settingsHub.callApiEnabled()) {
+                        SenderNet.getInstance().send(getContext(), settingsHub.getUrlApi(), getString(R.string.api_message_attack_detected));
                     }
                 }
                 showHistoryButton.setText("" + nbAttacksDetected + " Attacks detected !");
