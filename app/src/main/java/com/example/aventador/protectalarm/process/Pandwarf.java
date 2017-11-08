@@ -34,7 +34,7 @@ public class Pandwarf {
     /*
     For Guardian mode
      */
-    private static int GUARDIAN_NB_SEQUENCES = 25; // 20 sequences, one sequence -> 4 scans.
+    private static int GUARDIAN_NB_SEQUENCES = 25; // 25 sequences, one sequence -> 4 scans.
 
     /*
     For discovery mode
