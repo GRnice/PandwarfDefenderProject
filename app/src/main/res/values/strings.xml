@@ -8,6 +8,9 @@
     <string name="shared_prefs_key">shared_prefs_pandwarf_defender</string>
     <string name="shared_prefs_url_key">pandwarf_defender_url_key</string>
 
+    <!-- Private files -->
+    <string name="settings_app_file">settings_app.txt</string>
+
     <!-- Directories -->
     <string name="root_dir">PandwarfDefender</string>
     <string name="config_dir">configs</string>

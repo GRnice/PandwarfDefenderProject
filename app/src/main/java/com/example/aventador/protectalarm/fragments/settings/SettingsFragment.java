@@ -14,6 +14,8 @@ import android.widget.Switch;
 
 import com.example.aventador.protectalarm.Main2Activity;
 import com.example.aventador.protectalarm.R;
+import com.example.aventador.protectalarm.storage.FileManager;
+import com.example.aventador.protectalarm.tools.Logger;
 
 import java.util.zip.Inflater;
 
@@ -22,6 +24,8 @@ import java.util.zip.Inflater;
  */
 
 public class SettingsFragment extends Fragment {
+
+    private static final String TAG = "SettingsFragment";
 
     private ImageButton backButton;
 
@@ -34,11 +38,13 @@ public class SettingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View bodyView = inflater.inflate(R.layout.fragment_settings, container, false);
-        settingsHub = new SettingsHub();
+
+
         backButton = (ImageButton) bodyView.findViewById(R.id.back_button_settings);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                saveSettings();
                 ((Main2Activity) getActivity()).closeSettings();
             }
         });
@@ -69,6 +75,30 @@ public class SettingsFragment extends Fragment {
                 urlApi.setEnabled(enabled);
             }
         });
+        loadSettings();
         return bodyView;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Logger.d(TAG, "onStop()");
+        saveSettings();
+    }
+
+    private void saveSettings() {
+        Logger.d(TAG, "saveSettings():");
+        FileManager.getInstance().saveSettings(getContext(), getString(R.string.settings_app_file), settingsHub);
+    }
+
+    private void loadSettings() {
+        Logger.d(TAG, "loadSettings():");
+        settingsHub = FileManager.getInstance().loadSettings(getContext(), getString(R.string.settings_app_file));
+        if (settingsHub ==  null) {
+            settingsHub = new SettingsHub();
+            return;
+        }
+        enableCallApi.setChecked(settingsHub.callApiEnabled());
+        urlApi.setText(settingsHub.getUrlApi());
     }
 }
