@@ -14,8 +14,29 @@ __To protect your alarm proceed in two steps only__
 
 1) Connect the app to your PandwaRF
 
+<table>
+<tr>
+<td>
+<img height="500" src="https://github.com/GRnice/PandwarfDefenderProject/blob/master/wiki/Pairing-disconnected.png"/>
+</td>
+<td>
+<img height="500" src="https://github.com/GRnice/PandwarfDefenderProject/blob/master/wiki/Pairing-scan.png"/>
+</td>
+<td>
+<img height="500" src="https://github.com/GRnice/PandwarfDefenderProject/blob/master/wiki/Pairing-connected.png"/>
+</td>
+</tr>
+</table>
+
 2) Protect your alarm !
 
+<table>
+<tr>
+<td>
+<img height="500" src="https://github.com/GRnice/PandwarfDefenderProject/blob/master/wiki/frag-protection.png"/>
+</td>
+</tr>
+</table>
 
 
 If you want custom any parameters to improve if necessary, check the advanced mode in the page "Protection".
