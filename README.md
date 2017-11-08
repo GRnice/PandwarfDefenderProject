@@ -42,7 +42,7 @@ __To protect your alarm proceed in two steps only__
 </table>
 
 
-If you want custom any parameters to improve if necessary, check the advanced mode in the page "Protection".
+If you want custom any parameters to improve if necessary, check the advanced mode in the page [Protection](https://github.com/GRnice/PandwarfDefenderProject/wiki/Protection).
 Otherwise the app do the work for you.
 
 __the page "Signal Measurement" evaluates the average signal strength.__
