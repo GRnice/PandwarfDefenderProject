@@ -91,12 +91,13 @@ public class Recaller {
         callbackMapping.put(identifier, cbToRecall);
         if (duration < 2000L) {
             new LittleWait(identifier, duration).start();
+        } else {
+            new JobRequest.Builder(identifier)
+                    .setExact(duration) // in n millis seconds, onRunJob is called.
+                    .setPersisted(true)
+                    .build()
+                    .schedule();
         }
-        new JobRequest.Builder(identifier)
-                .setExact(duration) // in n seconds, onRunJob is called.
-                .setPersisted(true)
-                .build()
-                .schedule();
     }
 
     /**
