@@ -427,9 +427,9 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
             if (currentState == NO_PROCESS_ON_RUN && !advancedModeEnable) {
                     new MaterialDialog.Builder(getContext())
                             .title("Protection")
-                            .content("Use the current parameters ? ")
+                            .content("Start autoscan ?")
                             .positiveText("Yes")
-                            .negativeText("No, check for me the best parameters")
+                            .negativeText("No, use current parameters")
                             .onPositive(new MaterialDialog.SingleButtonCallback() {
                                 @Override
                                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
