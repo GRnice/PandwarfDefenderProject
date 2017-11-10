@@ -434,16 +434,17 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                                 @Override
                                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                     // Yes
-                                    Logger.d(TAG, "onClick: startProtection");
-                                    startProtection();
+                                    Logger.d(TAG, "onClick: startScan");
+                                    startScan();
+                                    
                                 }
                             })
                             .onNegative(new MaterialDialog.SingleButtonCallback() {
                                 @Override
                                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                     // No
-                                    Logger.d(TAG, "onClick: startScan");
-                                    startScan();
+                                    Logger.d(TAG, "onClick: startProtection");
+                                    startProtection();
                                 }
                             }).show();
             }  else if (currentState == NO_PROCESS_ON_RUN && advancedModeEnable){
