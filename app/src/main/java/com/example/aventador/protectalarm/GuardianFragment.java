@@ -436,7 +436,6 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
                                     // Yes
                                     Logger.d(TAG, "onClick: startScan");
                                     startScan();
-                                    
                                 }
                             })
                             .onNegative(new MaterialDialog.SingleButtonCallback() {
