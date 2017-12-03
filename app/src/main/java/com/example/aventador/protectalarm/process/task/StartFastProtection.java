@@ -34,7 +34,7 @@ class StartFastProtection extends Task {
                     toastShow("Fast protection analyzer not started");
                     EventBus.getDefault().postSticky(new StateEvent(com.example.aventador.protectalarm.events.State.FAST_PROTECTION_ANALYZER_FAIL, ""));
                 } else {
-                    toastShow("Fast protection analyzer started, will take 1 min");
+                    toastShow("Fast protection analyzer started, will take at most 2 min");
                 }
                 cbThreadDone.done(startSuccess);
             }
