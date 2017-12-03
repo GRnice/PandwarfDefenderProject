@@ -575,7 +575,7 @@ public class GuardianFragment extends Fragment implements SeekBar.OnSeekBarChang
         switch (seekBar.getId()) {
             case R.id.tolerance_seekbar: {
                 tolerance = i;
-                toleranceTextView.setText("Tolerance: " + tolerance + "%");
+                toleranceTextView.setText("Peak tolerance: " + tolerance + "%");
                 break;
             }
             case R.id.margin_error_seekbar: {
